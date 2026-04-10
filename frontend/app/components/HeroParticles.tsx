@@ -55,7 +55,7 @@ function ParticleGalaxy({ mousePos }: { mousePos: { x: number; y: number } }) {
     if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
   }, [matrices, colors]);
 
-  useFrame((state, delta) => {
+  useFrame((_state, delta) => {
     if (!meshRef.current) return;
     meshRef.current.rotation.z += delta * 0.018;
 

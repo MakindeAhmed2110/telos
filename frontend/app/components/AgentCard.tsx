@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
 import { Link } from "react-router";
 import Button from "~/components/ui/Button";
 import { CATEGORY_COLORS, type Agent } from "~/data/mockData";
@@ -94,9 +93,9 @@ export default function AgentCard({ agent, onHire }: AgentCardProps) {
           >
             Hire Agent
           </Button>
-          <Link to={`/marketplace/${agent.id}`} className="flex-1">
+          <Link to={`/economy#${encodeURIComponent(agent.id)}`} className="flex-1">
             <Button size="sm" variant="secondary" className="w-full">
-              View Profile →
+              In economy →
             </Button>
           </Link>
         </div>

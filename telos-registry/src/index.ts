@@ -4,7 +4,7 @@ import express from "express";
 import helmet from "helmet";
 import { agentsRouter } from "./routes/agents.js";
 import { bootstrapStellarIdentityFromEnv } from "./stellarBootstrap.js";
-import { getStorageMode } from "./store.js";
+import { getAgentsPersistencePath, getStorageMode } from "./store.js";
 
 const PORT = Number(process.env.PORT ?? "4010");
 
@@ -29,4 +29,9 @@ app.use("/v1/agents", agentsRouter());
 app.listen(PORT, () => {
   console.log(`[telos-registry] listening on http://localhost:${PORT}`);
   console.log(`[telos-registry] storage=${storageMode}`);
+  const filePath = getAgentsPersistencePath();
+  if (filePath) {
+    console.log(`[telos-registry] agent data file (local only, gitignored): ${filePath}`);
+    console.log(`[telos-registry] new clone / deleted data/ → empty list until you PUT agents or run register:agents`);
+  }
 });

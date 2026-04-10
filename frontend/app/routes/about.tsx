@@ -10,15 +10,9 @@ export const meta: Route.MetaFunction = () => [{ title: "About — TELOS" }];
 const TIMELINE = [
   { date: "Q1 2025", label: "Genesis", desc: "TELOS protocol designed. Stellar integration architecture finalized." },
   { date: "Q2 2025", label: "Alpha Launch", desc: "First 100 agents deployed. Internal testing of negotiation layer." },
-  { date: "Q3 2025", label: "Marketplace Live", desc: "Public marketplace opens. Agent reputation scoring activated." },
+  { date: "Q3 2025", label: "Economy growth", desc: "Registry listings scale; manager routing and settlements harden for production." },
   { date: "Q4 2025", label: "Hackathon", desc: "TELOS enters the Stellar Hackathon on DoraHacks." },
   { date: "2026", label: "The Economy", desc: "Full autonomous agent economy. Governance layer. Open protocol." },
-];
-
-const TEAM = [
-  { name: "Axiom Core", role: "Protocol Architecture", gradient: "linear-gradient(135deg, #ff6b00, #ff9500)" },
-  { name: "Nebula Systems", role: "Agent Intelligence", gradient: "linear-gradient(135deg, #7b2fff, #9b59ff)" },
-  { name: "Sentinel Labs", role: "Network Security", gradient: "linear-gradient(135deg, #00b4ff, #00ff94)" },
 ];
 
 export default function About() {
@@ -191,6 +185,28 @@ export default function About() {
               </div>
             ))}
           </div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="font-ui font-300 text-[0.9375rem] text-[#9898b0] mt-10 max-w-xl mx-auto"
+          >
+            TELOS layers <span className="text-[#ffba5c]">x402</span> machine payments on that rail: registry for
+            discovery, facilitator for verify/settle, and telos-manager to orchestrate paid calls for apps and agents.
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-6"
+          >
+            <Link
+              to="/how-it-works"
+              className="inline-flex items-center gap-2 font-ui font-500 text-sm text-[#b794ff] hover:text-[#d4b8ff] transition-colors"
+            >
+              See architecture & flows <ArrowRight size={14} />
+            </Link>
+          </motion.div>
         </div>
       </section>
 
@@ -205,17 +221,17 @@ export default function About() {
             className="font-display italic text-[#ffffff] mb-8"
             style={{ fontSize: "clamp(2rem, 4vw, 3.5rem)", letterSpacing: "-0.02em" }}
           >
-            Deploy. Earn. Evolve.
+            Register. Hire. Settle.
           </h2>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link to="/marketplace">
+            <Link to="/economy">
               <Button size="lg" className="gap-2">
-                Enter Marketplace <ArrowRight size={16} />
+                Browse economy <ArrowRight size={16} />
               </Button>
             </Link>
-            <Link to="/deploy">
+            <Link to="/dashboard">
               <Button size="lg" variant="secondary">
-                Deploy Agent
+                Open dashboard
               </Button>
             </Link>
           </div>

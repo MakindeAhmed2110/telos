@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { AGENTS, TRANSACTIONS, type Agent, type Transaction } from "~/data/mockData";
+import { TRANSACTIONS, type Agent, type Transaction } from "~/data/mockData";
 
 interface ToastItem {
   id: string;
@@ -8,6 +8,8 @@ interface ToastItem {
   timestamp: number;
 }
 
+export type WalletMode = "none" | "kit" | "generated";
+
 interface WalletState {
   connected: boolean;
   address: string | null;
@@ -15,25 +17,28 @@ interface WalletState {
 }
 
 interface TelosStore {
-  // Wallet
+  walletMode: WalletMode;
+  /** In-memory only for generated wallets; cleared on disconnect. Never persisted. */
+  walletSecret: string | null;
+  generateWalletModalOpen: boolean;
   wallet: WalletState;
-  connectWallet: () => void;
-  disconnectWallet: () => void;
+  connectWallet: () => Promise<void>;
+  /** Opens the generate-wallet modal (real Stellar keypair). */
+  generateWallet: () => void;
+  closeGenerateWalletModal: () => void;
+  confirmGeneratedWallet: (publicKey: string, secretKey: string) => void;
+  disconnectWallet: () => Promise<void>;
 
-  // Agents
   agents: Agent[];
   myAgents: Agent[];
   deployAgent: (agent: Omit<Agent, "id" | "earnings" | "timesHired" | "rating" | "successRate" | "avgResponse" | "activeSince">) => void;
 
-  // Transactions
   transactions: Transaction[];
 
-  // Toast
   toasts: ToastItem[];
   addToast: (type: ToastItem["type"], message: string) => void;
   removeToast: (id: string) => void;
 
-  // Network stats (live mock)
   stats: {
     activeAgents: number;
     transactionsPerHour: number;
@@ -42,37 +47,88 @@ interface TelosStore {
   };
   updateStats: () => void;
 
-  // Dashboard portfolio
   portfolioValue: number;
   portfolioChange: number;
 }
 
 export const useTelosStore = create<TelosStore>((set, get) => ({
+  walletMode: "none",
+  walletSecret: null,
+  generateWalletModalOpen: false,
+
   wallet: {
     connected: false,
     address: null,
     balance: 0,
   },
 
-  connectWallet: () => {
-    set({
-      wallet: {
-        connected: true,
-        address: "GDQP2KPQGKIHYJGXNUIYOMHARUARCA7DJT5FO2FFOOKY3B2WSQHG4W37",
-        balance: 47382.5,
-      },
-    });
-    get().addToast("success", "Wallet connected successfully.");
+  connectWallet: async () => {
+    if (typeof window === "undefined") return;
+    try {
+      const [{ initStellarWalletsKit }, { StellarWalletsKit }] = await Promise.all([
+        import("~/lib/initStellarWalletsKit"),
+        import("@creit-tech/stellar-wallets-kit/sdk"),
+      ]);
+      initStellarWalletsKit();
+      const { address } = await StellarWalletsKit.authModal();
+      set({
+        walletMode: "kit",
+        walletSecret: null,
+        wallet: { connected: true, address, balance: 0 },
+      });
+      get().addToast("success", "Wallet connected. Approve x402 payment prompts in your wallet when you send tasks.");
+    } catch (e) {
+      const msg =
+        e && typeof e === "object" && "message" in e
+          ? String((e as { message: string }).message)
+          : String(e);
+      const lower = msg.toLowerCase();
+      if (lower.includes("cancel") || lower.includes("reject") || lower.includes("closed")) {
+        get().addToast("info", "Wallet connection cancelled.");
+      } else {
+        get().addToast("error", `Could not connect wallet: ${msg}`);
+      }
+    }
   },
 
-  disconnectWallet: () => {
-    set({ wallet: { connected: false, address: null, balance: 0 } });
+  generateWallet: () => set({ generateWalletModalOpen: true }),
+
+  closeGenerateWalletModal: () => set({ generateWalletModalOpen: false }),
+
+  confirmGeneratedWallet: (publicKey, secretKey) => {
+    set({
+      walletMode: "generated",
+      walletSecret: secretKey,
+      generateWalletModalOpen: false,
+      wallet: { connected: true, address: publicKey, balance: 0 },
+    });
+    get().addToast(
+      "warning",
+      "Generated wallet active — secret stays in this tab only. Fund testnet USDC before paid calls. Use a browser wallet for real use.",
+    );
+  },
+
+  disconnectWallet: async () => {
+    if (typeof window !== "undefined" && get().walletMode === "kit") {
+      try {
+        const { StellarWalletsKit } = await import("@creit-tech/stellar-wallets-kit/sdk");
+        await StellarWalletsKit.disconnect();
+      } catch {
+        /* ignore */
+      }
+    }
+    set({
+      walletMode: "none",
+      walletSecret: null,
+      generateWalletModalOpen: false,
+      wallet: { connected: false, address: null, balance: 0 },
+    });
     get().addToast("info", "Wallet disconnected.");
   },
 
-  agents: AGENTS,
+  agents: [],
 
-  myAgents: AGENTS.slice(0, 3),
+  myAgents: [],
 
   deployAgent: (partial) => {
     const newAgent: Agent = {

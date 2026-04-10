@@ -14,13 +14,11 @@ type Pages = {
   "/": {
     params: {};
   };
-  "/marketplace": {
+  "/how-it-works": {
     params: {};
   };
-  "/marketplace/:agentId": {
-    params: {
-      "agentId": string;
-    };
+  "/economy": {
+    params: {};
   };
   "/dashboard": {
     params: {};
@@ -34,12 +32,6 @@ type Pages = {
   "/dashboard/settings": {
     params: {};
   };
-  "/deploy": {
-    params: {};
-  };
-  "/network": {
-    params: {};
-  };
   "/about": {
     params: {};
   };
@@ -48,19 +40,19 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/marketplace" | "/marketplace/:agentId" | "/dashboard" | "/dashboard/agents" | "/dashboard/transactions" | "/dashboard/settings" | "/deploy" | "/network" | "/about";
+    page: "/" | "/how-it-works" | "/economy" | "/dashboard" | "/dashboard/agents" | "/dashboard/transactions" | "/dashboard/settings" | "/about";
   };
   "routes/_index.tsx": {
     id: "routes/_index";
     page: "/";
   };
-  "routes/marketplace.tsx": {
-    id: "routes/marketplace";
-    page: "/marketplace";
+  "routes/how-it-works.tsx": {
+    id: "routes/how-it-works";
+    page: "/how-it-works";
   };
-  "routes/marketplace.$agentId.tsx": {
-    id: "routes/marketplace.$agentId";
-    page: "/marketplace/:agentId";
+  "routes/economy.tsx": {
+    id: "routes/economy";
+    page: "/economy";
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
@@ -82,14 +74,6 @@ type RouteFiles = {
     id: "routes/dashboard.settings";
     page: "/dashboard/settings";
   };
-  "routes/deploy.tsx": {
-    id: "routes/deploy";
-    page: "/deploy";
-  };
-  "routes/network.tsx": {
-    id: "routes/network";
-    page: "/network";
-  };
   "routes/about.tsx": {
     id: "routes/about";
     page: "/about";
@@ -99,14 +83,12 @@ type RouteFiles = {
 type RouteModules = {
   "root": typeof import("./app/root.tsx");
   "routes/_index": typeof import("./app/routes/_index.tsx");
-  "routes/marketplace": typeof import("./app/routes/marketplace.tsx");
-  "routes/marketplace.$agentId": typeof import("./app/routes/marketplace.$agentId.tsx");
+  "routes/how-it-works": typeof import("./app/routes/how-it-works.tsx");
+  "routes/economy": typeof import("./app/routes/economy.tsx");
   "routes/dashboard": typeof import("./app/routes/dashboard.tsx");
   "routes/dashboard._index": typeof import("./app/routes/dashboard._index.tsx");
   "routes/dashboard.agents": typeof import("./app/routes/dashboard.agents.tsx");
   "routes/dashboard.transactions": typeof import("./app/routes/dashboard.transactions.tsx");
   "routes/dashboard.settings": typeof import("./app/routes/dashboard.settings.tsx");
-  "routes/deploy": typeof import("./app/routes/deploy.tsx");
-  "routes/network": typeof import("./app/routes/network.tsx");
   "routes/about": typeof import("./app/routes/about.tsx");
 };

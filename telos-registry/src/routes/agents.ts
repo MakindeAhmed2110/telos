@@ -7,7 +7,13 @@ export function agentsRouter(): Router {
   const r = createRouter();
 
   r.get("/", async (_req: Request, res: Response) => {
+    const t0 = performance.now();
     const agents = await listAgents();
+    const ms = performance.now() - t0;
+    res.setHeader("Server-Timing", `list;dur=${ms.toFixed(1)};desc="listAgents"`);
+    if (process.env.TELOS_REGISTRY_LOG_TIMING === "1") {
+      console.log(`[telos-registry] GET /v1/agents listAgents ${ms.toFixed(1)}ms (${agents.length} agents)`);
+    }
     res.json({ agents, count: agents.length });
   });
 

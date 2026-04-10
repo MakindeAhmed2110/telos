@@ -4,24 +4,20 @@ import type { Route } from "./+types/dashboard.settings";
 import Button from "~/components/ui/Button";
 import Input from "~/components/ui/Input";
 import { useTelosStore } from "~/store";
-import { truncateAddress } from "~/lib/utils";
 
 export const meta: Route.MetaFunction = () => [{ title: "Settings — TELOS Dashboard" }];
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div
-      className="p-6 rounded-xl space-y-4"
-      style={{ background: "#14142b", border: "1px solid rgba(255,255,255,0.05)" }}
-    >
-      <p className="font-ui font-600 text-[0.6875rem] uppercase tracking-[0.15em] text-[#5c5c78]">{title}</p>
+    <section className="dashboard-panel dashboard-panel--stack" aria-label={title}>
+      <p className="dashboard-panel__title">{title}</p>
       {children}
-    </div>
+    </section>
   );
 }
 
 export default function DashboardSettings() {
-  const { wallet, connectWallet, disconnectWallet, addToast } = useTelosStore();
+  const { wallet, walletMode, connectWallet, disconnectWallet, generateWallet, addToast } = useTelosStore();
   const [displayName, setDisplayName] = useState("Agent Operator");
   const [notifications, setNotifications] = useState({ txAlerts: true, agentStatus: true, earnings: true });
   const [defaultFee, setDefaultFee] = useState("0.5");
@@ -29,19 +25,17 @@ export default function DashboardSettings() {
   const handleSave = () => addToast("success", "Settings saved.");
 
   return (
-    <div className="space-y-8 max-w-2xl">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <p className="font-ui text-[0.6875rem] uppercase tracking-[0.2em] text-[#ff9500]">CONFIGURATION</p>
-        <h1 className="font-display italic text-[#ffffff] mt-1" style={{ fontSize: "2rem", letterSpacing: "-0.02em" }}>
-          Settings
-        </h1>
-      </motion.div>
+    <div className="dashboard-page dashboard-page--narrow">
+      <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+        <p className="dashboard-hero__eyebrow">CONFIGURATION</p>
+        <h1 className="dashboard-hero__title">Settings</h1>
+      </motion.header>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="space-y-4"
+        className="dashboard-settings-stack"
       >
         {/* Profile */}
         <Section title="PROFILE">
@@ -62,24 +56,35 @@ export default function DashboardSettings() {
         <Section title="WALLET">
           {wallet.connected ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 rounded-lg" style={{ background: "rgba(0,255,148,0.04)", border: "1px solid rgba(0,255,148,0.15)" }}>
+              <div className="dashboard-wallet-banner">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="w-2 h-2 rounded-full bg-[#00ff94]" />
                     <span className="font-ui text-[0.6875rem] uppercase tracking-wider text-[#00ff94]">Connected</span>
                   </div>
                   <p className="font-mono text-[0.875rem] text-[#e8e8f0]">{wallet.address}</p>
-                  <p className="font-mono text-[0.75rem] text-[#ffba5c] mt-1">Balance: ₮{wallet.balance.toLocaleString()}</p>
+                  <p className="font-mono text-[0.6875rem] text-[#5c5c78] mt-1">
+                    {walletMode === "kit" ? "Connected via Stellar Wallets Kit" : "Generated wallet (secret in session only)"}
+                  </p>
                 </div>
-                <Button variant="danger" size="sm" onClick={disconnectWallet}>
+                <Button variant="danger" size="sm" onClick={() => void disconnectWallet()}>
                   Disconnect
                 </Button>
               </div>
             </div>
           ) : (
             <div className="text-center py-6 space-y-4">
-              <p className="font-ui font-300 text-[#9898b0] text-[0.875rem]">No wallet connected. Connect your Stellar wallet to start earning.</p>
-              <Button onClick={connectWallet} size="md">Connect Wallet</Button>
+              <p className="font-ui font-300 text-[#9898b0] text-[0.875rem]">
+                Connect a Stellar wallet to sign x402 payments, or generate a testnet keypair for auto-sign demos.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <Button onClick={() => void connectWallet()} size="md">
+                  Connect wallet
+                </Button>
+                <Button onClick={generateWallet} size="md" variant="secondary">
+                  Generate wallet
+                </Button>
+              </div>
             </div>
           )}
         </Section>
@@ -167,8 +172,10 @@ export default function DashboardSettings() {
           </div>
         </Section>
 
-        <div className="flex justify-end">
-          <Button size="md" onClick={handleSave}>Save Settings</Button>
+        <div className="dashboard-settings-actions">
+          <Button size="md" onClick={handleSave}>
+            Save Settings
+          </Button>
         </div>
       </motion.div>
     </div>

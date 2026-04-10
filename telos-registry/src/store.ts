@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import fs from "fs/promises";
 import path from "path";
-import { spawnSync, type SpawnSyncReturns } from "child_process";
+import { spawn, spawnSync, type SpawnSyncReturns } from "child_process";
 import type { AgentRecord, AgentRegisterInput } from "./types.js";
 import { getStellarPublicKey } from "./stellarBootstrap.js";
 
@@ -15,7 +15,28 @@ const ONCHAIN_SOURCE_ACCOUNT = process.env.TELOS_REGISTRY_SOURCE_ACCOUNT?.trim()
 const ONCHAIN_NETWORK = process.env.TELOS_REGISTRY_NETWORK?.trim() || "testnet";
 const STELLAR_BINS = process.platform === "win32" ? ["stellar", "stellar.cmd"] : ["stellar"];
 
+/** In-process cache for GET /v1/agents (on-chain + file). 0 = disabled. */
+const LIST_CACHE_MS = Math.max(
+  0,
+  Number.parseInt(process.env.TELOS_REGISTRY_LIST_CACHE_MS ?? "5000", 10) || 5000,
+);
+
+/** Max concurrent Stellar CLI reads when listing agents on-chain. */
+const LIST_ONCHAIN_CONCURRENCY = Math.max(
+  1,
+  Number.parseInt(process.env.TELOS_REGISTRY_LIST_CONCURRENCY ?? "8", 10) || 8,
+);
+
 const onchainConfigured = Boolean(ONCHAIN_CONTRACT_ID && ONCHAIN_SOURCE_ACCOUNT);
+
+/** Set when on-chain mode passes CLI detection; reused for spawn/spawnSync. */
+let resolvedStellarBin: string | null = null;
+
+let listAgentsCache: { at: number; data: AgentRecord[] } | null = null;
+
+function invalidateAgentsListCache(): void {
+  listAgentsCache = null;
+}
 
 function stellarCliAppearsMissing(stderr?: string, stdout?: string, errorMessage?: string): boolean {
   const msg = `${stderr ?? ""} ${stdout ?? ""} ${errorMessage ?? ""}`.toLowerCase();
@@ -29,20 +50,33 @@ function stellarCliAppearsMissing(stderr?: string, stdout?: string, errorMessage
 
 function detectOnchainEnabled(): boolean {
   if (!onchainConfigured) return false;
-  const result = runStellar(["--version"]);
-  const missing = stellarCliAppearsMissing(result.stderr, result.stdout, result.error?.message);
-  if (missing) {
-    console.warn(
-      "[telos-registry] On-chain config detected, but Stellar CLI is unavailable; falling back to file storage.",
-    );
-    return false;
+  for (const bin of STELLAR_BINS) {
+    const result = spawnSync(bin, ["--version"], {
+      shell: false,
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+    if (!stellarCliAppearsMissing(result.stderr, result.stdout, result.error?.message)) {
+      resolvedStellarBin = bin;
+      return true;
+    }
   }
-  return true;
+  console.warn(
+    "[telos-registry] On-chain config detected, but Stellar CLI is unavailable; falling back to file storage.",
+  );
+  return false;
 }
 
 const isOnchainEnabled = detectOnchainEnabled();
 
 function runStellar(args: string[]) {
+  if (resolvedStellarBin) {
+    return spawnSync(resolvedStellarBin, args, {
+      shell: false,
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+  }
   let lastResult: SpawnSyncReturns<string> | undefined;
   for (const bin of STELLAR_BINS) {
     const result = spawnSync(bin, args, {
@@ -70,11 +104,10 @@ function hashId(id: string): string {
   return createHash("sha256").update(id).digest("hex");
 }
 
-function runStellarInvoke(args: string[], send: boolean): string {
+function buildStellarInvokeArgs(contractArgs: string[], send: boolean): string[] {
   if (!ONCHAIN_CONTRACT_ID || !ONCHAIN_SOURCE_ACCOUNT) {
     throw new Error("On-chain mode requires TELOS_REGISTRY_CONTRACT_ID and TELOS_REGISTRY_SOURCE_ACCOUNT");
   }
-
   const baseArgs = [
     "contract",
     "invoke",
@@ -88,8 +121,12 @@ function runStellarInvoke(args: string[], send: boolean): string {
   if (send) {
     baseArgs.push("--send", "yes");
   }
-  baseArgs.push("--", ...args);
+  baseArgs.push("--", ...contractArgs);
+  return baseArgs;
+}
 
+function runStellarInvoke(args: string[], send: boolean): string {
+  const baseArgs = buildStellarInvokeArgs(args, send);
   const result = runStellar(baseArgs);
 
   if (result.status !== 0) {
@@ -98,6 +135,59 @@ function runStellarInvoke(args: string[], send: boolean): string {
     throw new Error(stderr || stdout || "stellar invoke failed");
   }
   return (result.stdout || "").trim();
+}
+
+/** Read-only contract invoke via child process (parallel-safe vs sync stellar). */
+function runStellarInvokeAsync(args: string[], send: boolean): Promise<string> {
+  const bin = resolvedStellarBin;
+  if (!bin) {
+    return Promise.reject(new Error("Stellar CLI not resolved"));
+  }
+  const baseArgs = buildStellarInvokeArgs(args, send);
+  return new Promise((resolve, reject) => {
+    const child = spawn(bin, baseArgs, {
+      shell: false,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    const out = child.stdout;
+    const err = child.stderr;
+    if (!out || !err) {
+      reject(new Error("stellar spawn: missing stdio pipes"));
+      return;
+    }
+    out.on("data", (chunk: Buffer) => {
+      stdout += chunk.toString("utf8");
+    });
+    err.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString("utf8");
+    });
+    child.on("error", (invokeErr: Error) => reject(invokeErr));
+    child.on("close", (code: number | null) => {
+      if (code !== 0) {
+        const e = (stderr || "").trim() || (stdout || "").trim() || "stellar invoke failed";
+        reject(new Error(e));
+        return;
+      }
+      resolve(stdout.trim());
+    });
+  });
+}
+
+async function parallelLimit<T>(factories: Array<() => Promise<T>>, limit: number): Promise<T[]> {
+  const results: T[] = new Array(factories.length);
+  let next = 0;
+  async function worker() {
+    for (;;) {
+      const i = next++;
+      if (i >= factories.length) return;
+      results[i] = await factories[i]();
+    }
+  }
+  const n = Math.min(limit, Math.max(1, factories.length));
+  await Promise.all(Array.from({ length: n }, () => worker()));
+  return results;
 }
 
 function encodeMetadata(record: AgentRecord): string {
@@ -134,50 +224,19 @@ function parseJson<T>(raw: string): T {
   }
 }
 
-async function listAgentsOnchain(): Promise<AgentRecord[]> {
-  const idsRaw = runStellarInvoke(["list_ids"], false);
-  const chainIds = parseJson<string[]>(idsRaw);
-  const records: AgentRecord[] = [];
-
-  for (const hexId of chainIds) {
-    const profileRaw = runStellarInvoke(["get", "--agent_id", hexId], false);
-    if (profileRaw === "null") continue;
-
-    const profile = parseJson<ChainProfile>(profileRaw);
-    const fromMeta = decodeMetadata(profile.metadata_uri);
-    const id = (fromMeta.id || "").trim() || hexId;
-    const now = new Date().toISOString();
-    const record: AgentRecord = {
-      id,
-      name: fromMeta.name || id,
-      description: fromMeta.description,
-      capabilities: Array.isArray(fromMeta.capabilities) && fromMeta.capabilities.length > 0
-        ? fromMeta.capabilities
-        : ["unknown"],
-      baseUrl: profile.endpoint,
-      payTo: profile.pay_to,
-      suggestedPrice: fromMeta.suggestedPrice,
-      network:
-        fromMeta.network === "stellar:mainnet" || fromMeta.network === "stellar:testnet"
-          ? fromMeta.network
-          : "stellar:testnet",
-      metadata: fromMeta.metadata,
-      registeredAt: fromMeta.registeredAt || now,
-      updatedAt: fromMeta.updatedAt || now,
-    };
-    records.push(record);
-  }
-
-  return records.sort((a, b) => a.id.localeCompare(b.id));
-}
-
-async function getAgentOnchain(id: string): Promise<AgentRecord | undefined> {
-  const hexId = hashId(id);
-  const profileRaw = runStellarInvoke(["get", "--agent_id", hexId], false);
-  if (profileRaw === "null") return undefined;
-
+function profileRecordFromGetOutput(
+  profileRaw: string,
+  hexId: string,
+  /** When set (e.g. GET /v1/agents/:id), use this as canonical id instead of metadata. */
+  logicalId?: string,
+): AgentRecord | null {
+  if (profileRaw === "null") return null;
   const profile = parseJson<ChainProfile>(profileRaw);
   const fromMeta = decodeMetadata(profile.metadata_uri);
+  const id =
+    logicalId !== undefined && logicalId.trim() !== ""
+      ? logicalId.trim()
+      : (fromMeta.id || "").trim() || hexId;
   const now = new Date().toISOString();
   return {
     id,
@@ -197,6 +256,28 @@ async function getAgentOnchain(id: string): Promise<AgentRecord | undefined> {
     registeredAt: fromMeta.registeredAt || now,
     updatedAt: fromMeta.updatedAt || now,
   };
+}
+
+async function listAgentsOnchain(): Promise<AgentRecord[]> {
+  const idsRaw = runStellarInvoke(["list_ids"], false);
+  const chainIds = parseJson<string[]>(idsRaw);
+  if (chainIds.length === 0) return [];
+
+  const factories = chainIds.map(
+    (hexId) => () =>
+      runStellarInvokeAsync(["get", "--agent_id", hexId], false).then((raw) =>
+        profileRecordFromGetOutput(raw, hexId),
+      ),
+  );
+  const rows = await parallelLimit(factories, LIST_ONCHAIN_CONCURRENCY);
+  const records = rows.filter((r): r is AgentRecord => r != null);
+  return records.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+async function getAgentOnchain(id: string): Promise<AgentRecord | undefined> {
+  const hexId = hashId(id);
+  const profileRaw = runStellarInvoke(["get", "--agent_id", hexId], false);
+  return profileRecordFromGetOutput(profileRaw, hexId, id) ?? undefined;
 }
 
 async function upsertAgentOnchain(input: AgentRegisterInput): Promise<AgentRecord> {
@@ -280,11 +361,23 @@ async function writeAll(data: Persisted): Promise<void> {
 }
 
 export async function listAgents(): Promise<AgentRecord[]> {
-  if (isOnchainEnabled) {
-    return listAgentsOnchain();
+  const now = Date.now();
+  if (LIST_CACHE_MS > 0 && listAgentsCache && now - listAgentsCache.at < LIST_CACHE_MS) {
+    return listAgentsCache.data;
   }
-  const { agents } = await readAll();
-  return Object.values(agents).sort((a, b) => a.id.localeCompare(b.id));
+
+  let data: AgentRecord[];
+  if (isOnchainEnabled) {
+    data = await listAgentsOnchain();
+  } else {
+    const { agents } = await readAll();
+    data = Object.values(agents).sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  if (LIST_CACHE_MS > 0) {
+    listAgentsCache = { at: now, data };
+  }
+  return data;
 }
 
 export async function getAgent(id: string): Promise<AgentRecord | undefined> {
@@ -297,7 +390,9 @@ export async function getAgent(id: string): Promise<AgentRecord | undefined> {
 
 export async function upsertAgent(record: AgentRegisterInput): Promise<AgentRecord> {
   if (isOnchainEnabled) {
-    return upsertAgentOnchain(record);
+    const saved = await upsertAgentOnchain(record);
+    invalidateAgentsListCache();
+    return saved;
   }
   const data = await readAll();
   const now = new Date().toISOString();
@@ -309,20 +404,29 @@ export async function upsertAgent(record: AgentRegisterInput): Promise<AgentReco
   };
   data.agents[record.id] = next;
   await writeAll(data);
+  invalidateAgentsListCache();
   return next;
 }
 
 export async function deleteAgent(id: string): Promise<boolean> {
   if (isOnchainEnabled) {
-    return deleteAgentOnchain(id);
+    const ok = await deleteAgentOnchain(id);
+    if (ok) invalidateAgentsListCache();
+    return ok;
   }
   const data = await readAll();
   if (!data.agents[id]) return false;
   delete data.agents[id];
   await writeAll(data);
+  invalidateAgentsListCache();
   return true;
 }
 
 export function getStorageMode(): "onchain" | "file" {
   return isOnchainEnabled ? "onchain" : "file";
+}
+
+/** Absolute path to file-backed agent JSON (null if on-chain mode). Not in git — see `.gitignore`. */
+export function getAgentsPersistencePath(): string | null {
+  return isOnchainEnabled ? null : path.resolve(DATA_FILE);
 }

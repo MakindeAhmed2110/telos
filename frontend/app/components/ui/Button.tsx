@@ -12,13 +12,15 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants: Record<Variant, string> = {
   primary: [
-    "bg-[rgba(255,107,0,0.12)] border border-[rgba(255,107,0,0.4)] text-[#ffba5c]",
-    "hover:bg-[rgba(255,107,0,0.2)] hover:border-[rgba(255,107,0,0.6)]",
-    "hover:shadow-[0_0_20px_rgba(255,107,0,0.15)]",
+    "bg-gradient-to-b from-[#ff8a2c] to-[#e85d00] border border-[rgba(255,200,140,0.45)]",
+    "text-[#0a0a0c] font-semibold shadow-[0_4px_20px_rgba(255,107,0,0.35)]",
+    "hover:from-[#ff9a40] hover:to-[#f06d10] hover:border-[rgba(255,210,160,0.55)]",
+    "hover:shadow-[0_6px_28px_rgba(255,107,0,0.45)] active:brightness-95",
   ].join(" "),
   secondary: [
-    "bg-transparent border border-[#3a3a52] text-[#9898b0]",
-    "hover:border-[#5c5c78] hover:text-[#e8e8f0]",
+    "bg-[rgba(255,255,255,0.06)] border border-[rgba(255,255,255,0.14)] text-[#e8e8f0]",
+    "hover:bg-[rgba(255,255,255,0.1)] hover:border-[rgba(255,186,92,0.35)] hover:text-[#ffffff]",
+    "hover:shadow-[0_0_16px_rgba(255,107,0,0.12)]",
   ].join(" "),
   ghost: [
     "bg-transparent border-none text-[#5c5c78]",
@@ -31,9 +33,9 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: "px-3 py-1.5 text-[0.6875rem] rounded-md",
-  md: "px-6 py-2.5 text-[0.8125rem] rounded-lg",
-  lg: "px-8 py-3.5 text-sm rounded-lg",
+  sm: "telos-btn--sm",
+  md: "telos-btn--md",
+  lg: "telos-btn--lg",
 };
 
 export default function Button({
@@ -51,7 +53,7 @@ export default function Button({
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
-        "font-ui font-medium cursor-pointer select-none",
+        "telos-btn font-ui font-medium cursor-pointer select-none",
         "transition-all duration-200",
         "inline-flex items-center justify-center gap-2",
         "disabled:opacity-40 disabled:cursor-not-allowed",

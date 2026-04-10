@@ -51,6 +51,9 @@ Desktop.ini
 # Vite
 frontend/.vite/
 
+# Stray JS next to TS/TSX breaks SSR: Node/Vite can resolve *.js before *.tsx
+frontend/app/**/*.js
+
 # Misc
 .cache/
 *.local

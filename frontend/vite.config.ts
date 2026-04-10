@@ -1,17 +1,37 @@
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { reactRouter } from "@react-router/dev/vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
-import { resolve } from "path";
 import tsconfigPaths from "vite-tsconfig-paths";
 
+const frontendRoot = path.dirname(fileURLToPath(import.meta.url));
+
 export default defineConfig({
+  resolve: {
+    // SSR module runner does not always honor vite-tsconfig-paths; keep ~ in sync with tsconfig "paths".
+    alias: { "~": path.join(frontendRoot, "app") },
+  },
   plugins: [
-    tailwindcss(),
     reactRouter(),
+    tailwindcss(),
     tsconfigPaths(),
   ],
   optimizeDeps: {
-    include: ["three", "react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
+    include: [
+      "three",
+      "react",
+      "react-dom",
+      "react/jsx-runtime",
+      "react/jsx-dev-runtime",
+      "@x402/core/client",
+      "@x402/stellar",
+      "@x402/stellar/exact/client",
+      "@stellar/stellar-sdk",
+      "@creit-tech/stellar-wallets-kit/sdk",
+      "@creit-tech/stellar-wallets-kit/modules/utils",
+      "@creit-tech/stellar-wallets-kit/types",
+    ],
   },
   // Use Vite's default resolution for React to prefer the ESM entry points.
   build: {

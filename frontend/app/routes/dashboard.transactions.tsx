@@ -67,31 +67,21 @@ export default function DashboardTransactions() {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
-        <p className="font-ui text-[0.6875rem] uppercase tracking-[0.2em] text-[#ff9500]">HISTORY</p>
-        <h1 className="font-display italic text-[#ffffff] mt-1" style={{ fontSize: "2rem", letterSpacing: "-0.02em" }}>
-          Transactions
-        </h1>
-        <p className="font-mono text-[0.75rem] text-[#5c5c78] mt-1">
-          {sorted.length.toLocaleString()} records — live feed active
-        </p>
-      </motion.div>
+    <div className="dashboard-page" style={{ gap: "1.5rem" }}>
+      <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+        <p className="dashboard-hero__eyebrow">HISTORY</p>
+        <h1 className="dashboard-hero__title">Transactions</h1>
+        <p className="dashboard-hero__meta">{sorted.length.toLocaleString()} records — live feed active</p>
+      </motion.header>
 
-      {/* Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         ref={tableRef}
-        className="rounded-xl overflow-hidden"
-        style={{ border: "1px solid rgba(255,255,255,0.06)" }}
+        className="dashboard-table-shell"
       >
-        <div className="overflow-x-auto">
+        <div className="dashboard-table-scroll">
           <table className="w-full min-w-[800px]">
             <thead>
               <tr style={{ background: "#0a0a14", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
@@ -187,29 +177,29 @@ export default function DashboardTransactions() {
           </table>
         </div>
 
-        {/* Pagination */}
-        <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: "#0a0a14" }}
-        >
-          <p className="font-ui text-[0.75rem] text-[#5c5c78]">
+        <div className="dashboard-table-foot">
+          <p className="font-ui text-[0.75rem] text-[#5c5c78]" style={{ margin: 0 }}>
             Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, sorted.length)} of {sorted.length.toLocaleString()}
           </p>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="p-1.5 rounded-lg text-[#5c5c78] hover:text-[#e8e8f0] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              style={{ background: "rgba(255,255,255,0.04)" }}
+              className="dashboard-icon-btn"
+              aria-label="Previous page"
             >
               <ChevronLeft size={14} />
             </button>
-            <span className="font-mono text-[0.75rem] text-[#9898b0]">{page} / {totalPages}</span>
+            <span className="font-mono text-[0.75rem] text-[#9898b0]">
+              {page} / {totalPages}
+            </span>
             <button
+              type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="p-1.5 rounded-lg text-[#5c5c78] hover:text-[#e8e8f0] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              style={{ background: "rgba(255,255,255,0.04)" }}
+              className="dashboard-icon-btn"
+              aria-label="Next page"
             >
               <ChevronRight size={14} />
             </button>

@@ -105,7 +105,7 @@ export function logPayToRouting(netConfig: NetworkConfig): void {
     [`GET /market/${ROUTE_SUFFIX}`, "PAY_TO_MARKET"],
     [`POST /website-builder/${ROUTE_SUFFIX}`, "PAY_TO_WEBSITE_BUILDER"],
   ];
-  console.log("[telos-agents] x402 payTo per route (registry payTo should match):");
+  console.log("[telos-agents] x402 payTo per route (from .env — not the registry DB):");
   for (const [route, envKey] of rows) {
     const explicit = Boolean(process.env[envKey]?.trim());
     const addr = payToOrDefault(envKey, base);
@@ -113,4 +113,7 @@ export function logPayToRouting(netConfig: NetworkConfig): void {
       `  ${route} -> ${addr}${explicit ? "" : " (env unset; using TESTNET_SERVER_STELLAR_ADDRESS)"}`,
     );
   }
+  console.log(
+    "[telos-agents] Economy/dashboard list agents from telos-registry (GET /v1/agents). If that list is empty, run `pnpm register:agents` with REGISTRY_URL + AGENTS_PUBLIC_BASE_URL set.",
+  );
 }

@@ -1,6 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Pause, Play, Settings2, Wallet, Trash2 } from "lucide-react";
-import { useState } from "react";
 import { Link } from "react-router";
 import type { Route } from "./+types/dashboard.agents";
 import Button from "~/components/ui/Button";
@@ -24,8 +23,7 @@ function AgentDashCard({ agent, onAction }: { agent: Agent; onAction: (type: str
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 100, damping: 20 }}
-      className="p-5 rounded-xl"
-      style={{ background: "#14142b", border: "1px solid rgba(255,255,255,0.05)" }}
+      className="dashboard-agent-card"
     >
       {/* Category bar */}
       <div className="h-0.5 rounded-full mb-4" style={{ background: catColor }} />
@@ -121,48 +119,45 @@ export default function DashboardAgents() {
   };
 
   return (
-    <div className="space-y-8">
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-start justify-between"
-      >
+    <div className="dashboard-page">
+      <motion.header initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="dashboard-hero__row">
         <div>
-          <p className="font-ui text-[0.6875rem] uppercase tracking-[0.2em] text-[#ff9500]">MANAGEMENT</p>
-          <h1 className="font-display italic text-[#ffffff] mt-1" style={{ fontSize: "2rem", letterSpacing: "-0.02em" }}>
-            My Agents
-          </h1>
+          <p className="dashboard-hero__eyebrow">MANAGEMENT</p>
+          <h1 className="dashboard-hero__title">My Agents</h1>
         </div>
-        <Link to="/deploy">
+        <Link to="/how-it-works">
           <Button className="gap-2">
-            <Plus size={14} /> Deploy New
+            <Plus size={14} /> Register agent
           </Button>
         </Link>
-      </motion.div>
+      </motion.header>
 
       {myAgents.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-32 flex flex-col items-center gap-6"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="dashboard-empty">
           <StarLogo size={80} animate />
           <div>
-            <p className="font-ui font-600 text-[#e8e8f0] text-xl mb-2">No agents deployed yet</p>
-            <p className="font-ui font-300 text-[#9898b0]">Deploy your first agent and watch it earn.</p>
+            <p className="font-ui font-600 text-[#e8e8f0] text-xl" style={{ margin: "0 0 0.5rem" }}>
+              No agents here yet
+            </p>
+            <p className="font-ui font-300 text-[#9898b0]" style={{ margin: 0 }}>
+              Register an external agent with telos-registry, then see it on the economy page.
+            </p>
           </div>
-          <Link to="/deploy">
-            <Button size="lg" className="gap-2">
-              Deploy Agent <Plus size={16} />
-            </Button>
-          </Link>
+          <div className="dashboard-empty__actions">
+            <Link to="/how-it-works">
+              <Button size="lg" className="gap-2">
+                Registry guide <Plus size={16} />
+              </Button>
+            </Link>
+            <Link to="/economy">
+              <Button size="lg" variant="secondary">
+                View economy
+              </Button>
+            </Link>
+          </div>
         </motion.div>
       ) : (
-        <motion.div
-          initial="initial"
-          animate="animate"
-          className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
-        >
+        <motion.div initial="initial" animate="animate" className="dashboard-agents-grid">
           <AnimatePresence>
             {myAgents.map((agent) => (
               <AgentDashCard key={agent.id} agent={agent} onAction={handleAction} />

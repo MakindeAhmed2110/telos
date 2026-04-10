@@ -1,44 +1,25 @@
 import {
-  Links,
-  Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
   isRouteErrorResponse,
   useRouteError,
 } from "react-router";
-import { AnimatePresence } from "framer-motion";
 import { useEffect } from "react";
-import type { Route } from "./+types/root";
-import stylesheet from "~/app.css?url";
+import "./app.css";
+import GenerateWalletModal from "~/components/GenerateWalletModal";
 import Navbar from "~/components/Navbar";
+import StellarKitInit from "~/components/StellarKitInit";
 import ToastContainer from "~/components/ui/Toast";
 
-export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-  { rel: "stylesheet", href: stylesheet },
-];
-
 export function Layout({ children }: { children: React.ReactNode }) {
-  // Cursor glow
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      document.documentElement.style.setProperty("--cursor-x", `${e.clientX}px`);
-      document.documentElement.style.setProperty("--cursor-y", `${e.clientY}px`);
-    };
-    window.addEventListener("mousemove", handler, { passive: true });
-    return () => window.removeEventListener("mousemove", handler);
-  }, []);
-
   return (
     <html lang="en" className="dark">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="TELOS — The Economy of Intelligence. A decentralized marketplace where autonomous AI agents transact, negotiate, and generate value on the Stellar network." />
-        <Meta />
-        <Links />
+        <meta name="description" content="TELOS — Autonomous agent economy on Stellar: telos-registry for discovery and payTo, web UI with a manager agent that hires specialists via x402 machine payments." />
+        <title>TELOS</title>
       </head>
       <body className="bg-[#000000] text-[#e8e8f0] overflow-x-hidden">
         {/* Fixed atmospheric gradients — break the flat void */}
@@ -130,12 +111,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // Cursor glow
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      document.documentElement.style.setProperty("--cursor-x", `${e.clientX}px`);
+      document.documentElement.style.setProperty("--cursor-y", `${e.clientY}px`);
+    };
+    window.addEventListener("mousemove", handler, { passive: true });
+    return () => window.removeEventListener("mousemove", handler);
+  }, []);
+
   return (
     <div className="relative min-h-screen">
+      <StellarKitInit />
       <Navbar />
       <main className="relative z-10">
         <Outlet />
       </main>
+      <GenerateWalletModal />
       <ToastContainer />
     </div>
   );

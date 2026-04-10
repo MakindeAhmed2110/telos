@@ -7,8 +7,20 @@ import { createApiPaymentMiddleware } from "./x402.js";
 
 export function createApp(): express.Express {
   const app = express();
-  app.use(helmet());
-  app.use(cors({ origin: true }));
+  // Allow browser dashboards on another origin/port to read API responses (math x402 works; GET/POST to other routes must not be blocked by CORP).
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: "cross-origin" },
+    }),
+  );
+  // x402 v2 uses PAYMENT-REQUIRED / PAYMENT-RESPONSE headers; browsers hide them from JS unless exposed.
+  app.use(
+    cors({
+      origin: true,
+      exposedHeaders: ["PAYMENT-REQUIRED", "PAYMENT-RESPONSE"],
+      allowedHeaders: ["Content-Type", "Accept", "Authorization", "PAYMENT-SIGNATURE"],
+    }),
+  );
   app.use(express.json({ limit: "1mb" }));
 
   app.get("/health", (_req, res) => {
