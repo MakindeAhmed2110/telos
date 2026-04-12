@@ -19,7 +19,7 @@ function readTestnetConfig(): NetworkConfig | undefined {
   if (!ADDR.test(serverStellarAddress)) {
     throw new Error(`TESTNET_SERVER_STELLAR_ADDRESS is not a valid Stellar address`);
   }
-  const facilitatorUrl = process.env.TESTNET_FACILITATOR_URL?.trim();
+  const facilitatorUrl = process.env.TESTNET_FACILITATOR_URL?.trim().replace(/\/+$/, "");
   if (!facilitatorUrl) {
     throw new Error("TESTNET_FACILITATOR_URL is required when paywall is enabled");
   }
@@ -221,23 +221,65 @@ export function requireNetworkConfig(): NetworkConfig {
   return c;
 }
 
+const TRANSIENT_FACILITATOR_STATUSES = new Set([502, 503, 504, 429]);
+
 export async function validateFacilitator(cfg: NetworkConfig): Promise<void> {
+  const url = `${cfg.facilitatorUrl}/supported`;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (cfg.facilitatorApiKey) {
     headers.Authorization = `Bearer ${cfg.facilitatorApiKey}`;
   }
-  const controller = new AbortController();
-  const t = setTimeout(() => controller.abort(), 10_000);
-  try {
-    const res = await fetch(`${cfg.facilitatorUrl}/supported`, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      throw new Error(`GET /supported returned HTTP ${res.status}`);
+
+  const attempts = 5;
+  const delayMs = [2000, 4000, 6000, 8000, 10_000];
+  let lastError: Error | undefined;
+
+  for (let i = 0; i < attempts; i++) {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 15_000);
+    try {
+      const res = await fetch(url, {
+        method: "GET",
+        headers,
+        signal: controller.signal,
+      });
+      if (res.ok) {
+        return;
+      }
+      const snippet = (await res.text().catch(() => "")).slice(0, 240);
+      lastError = new Error(
+        `GET ${url} returned HTTP ${res.status}${snippet ? ` — ${snippet}` : ""}`,
+      );
+      if (!TRANSIENT_FACILITATOR_STATUSES.has(res.status)) {
+        throw lastError;
+      }
+    } catch (e) {
+      if (e instanceof Error && e.name === "AbortError") {
+        lastError = new Error(`GET ${url} timed out after 15s`);
+      } else if (e instanceof TypeError && String(e.message).includes("fetch")) {
+        lastError = new Error(`GET ${url} failed: ${e.message}`);
+      } else if (e instanceof Error) {
+        lastError = e;
+      } else {
+        lastError = new Error(String(e));
+      }
+    } finally {
+      clearTimeout(t);
     }
-  } finally {
-    clearTimeout(t);
+
+    if (i < attempts - 1) {
+      const wait = delayMs[i] ?? 3000;
+      console.warn(
+        `[telos-agents] facilitator check attempt ${i + 1}/${attempts} failed (${lastError?.message}); retrying in ${wait}ms`,
+      );
+      await new Promise((r) => setTimeout(r, wait));
+    }
   }
+
+  throw (
+    lastError ??
+    new Error(
+      `Facilitator unreachable after ${attempts} attempts. Set TESTNET_FACILITATOR_URL to your facilitator base (e.g. https://telos-facilitator.onrender.com) with no path suffix.`,
+    )
+  );
 }
