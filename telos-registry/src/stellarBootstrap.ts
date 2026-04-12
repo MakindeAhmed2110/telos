@@ -19,11 +19,20 @@ function stellarCliAppearsMissing(result: SpawnSyncReturns<string>): boolean {
   );
 }
 
-function runStellar(args: string[], input?: string): SpawnSyncReturns<string> {
+type RunStellarOpts = {
+  input?: string;
+  /** Child env only (e.g. STELLAR_SECRET_KEY for non-interactive `keys add`). */
+  env?: Record<string, string>;
+};
+
+function runStellar(args: string[], opts?: RunStellarOpts | string): SpawnSyncReturns<string> {
+  const o = typeof opts === "string" ? { input: opts } : opts ?? {};
+  const env = o.env ? { ...process.env, ...o.env } : process.env;
   let lastResult: SpawnSyncReturns<string> | undefined;
   for (const bin of STELLAR_BINS) {
     const result = spawnSync(bin, args, {
-      input,
+      input: o.input,
+      env,
       encoding: "utf8",
       shell: false,
       stdio: ["pipe", "pipe", "pipe"],
@@ -31,13 +40,23 @@ function runStellar(args: string[], input?: string): SpawnSyncReturns<string> {
     lastResult = result;
     if (!stellarCliAppearsMissing(result)) return result;
   }
-  return lastResult ?? spawnSync("stellar", args, { encoding: "utf8", shell: false, stdio: "pipe" });
+  return (
+    lastResult ??
+    spawnSync("stellar", args, {
+      input: o.input,
+      env,
+      encoding: "utf8",
+      shell: false,
+      stdio: "pipe",
+    })
+  );
 }
 
 /**
  * If TELOS_REGISTRY_SIGNER_SECRET is set, imports it into Stellar CLI as
  * TELOS_REGISTRY_SOURCE_ACCOUNT (e.g. "alice") so `stellar contract invoke` can sign.
- * Uses stdin (works more reliably than shell pipes on Windows Git Bash).
+ * Uses STELLAR_SECRET_KEY in the child process only (stellar-cli reads it before stdin/TTY;
+ * stdin-based import can fail when the runtime mis-detects a TTY, e.g. some containers).
  */
 export function bootstrapStellarIdentityFromEnv(): void {
   if (process.env.TELOS_REGISTRY_SKIP_STELLAR_BOOTSTRAP?.trim() === "1") {
@@ -61,20 +80,22 @@ export function bootstrapStellarIdentityFromEnv(): void {
 
   const stellarAlias = alias;
 
-  if (!secret.startsWith("S")) {
+  const normalizedSecret = secret.replace(/^\uFEFF/, "").replace(/\s+/g, "");
+  if (!normalizedSecret.startsWith("S")) {
     throw new Error("TELOS_REGISTRY_SIGNER_SECRET must be a Stellar secret key (S...)");
   }
 
-  // Do not pass `--secret-key`: in stellar-cli 23+ it means "prompt interactively" and ignores stdin.
-  // Pipe the S-key on stdin instead (supported for CI/Docker): `echo S... | stellar keys add NAME --overwrite`
-  const result = runStellar(["keys", "add", stellarAlias, "--overwrite"], `${secret}\n`);
+  // stellar-cli `keys add` checks STELLAR_SECRET_KEY first (see soroban-cli keys/add.rs).
+  const result = runStellar(["keys", "add", stellarAlias, "--overwrite"], {
+    env: { STELLAR_SECRET_KEY: normalizedSecret },
+  });
 
   if (stellarCliAppearsMissing(result)) {
     console.warn(
       `[telos-registry] Stellar CLI not on PATH — skipped importing "${stellarAlias}" from TELOS_REGISTRY_SIGNER_SECRET.\n` +
         `  Install: https://developers.stellar.org/docs/tools/developer-tools\n` +
         `  Or run once in a terminal where stellar works:\n` +
-        `    echo '<S_KEY>' | stellar keys add ${stellarAlias} --overwrite\n` +
+        `    STELLAR_SECRET_KEY='S...' stellar keys add ${stellarAlias} --overwrite\n` +
         `  Or set TELOS_REGISTRY_SKIP_STELLAR_BOOTSTRAP=1 after adding the key manually.\n` +
         `  On-chain registry reads/writes need that alias in the Stellar CLI keystore.`,
     );

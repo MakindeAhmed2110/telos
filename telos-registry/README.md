@@ -21,7 +21,7 @@ Edit `.env`:
 
 On-chain mode is active when **both** `TELOS_REGISTRY_CONTRACT_ID` and `TELOS_REGISTRY_SOURCE_ACCOUNT` are set.
 
-If `TELOS_REGISTRY_SIGNER_SECRET` is set, the server imports it into the CLI keystore before serving (non-interactive stdin to `stellar keys add <alias> --overwrite`; requires `stellar` on `PATH`).
+If `TELOS_REGISTRY_SIGNER_SECRET` is set, the server imports it into the CLI keystore before serving by running `stellar keys add <alias> --overwrite` with `STELLAR_SECRET_KEY` set only in that subprocess (stellar-cli’s supported non-interactive path; requires `stellar` on `PATH`).
 
 ## Run
 
