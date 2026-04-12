@@ -65,14 +65,16 @@ export function bootstrapStellarIdentityFromEnv(): void {
     throw new Error("TELOS_REGISTRY_SIGNER_SECRET must be a Stellar secret key (S...)");
   }
 
-  const result = runStellar(["keys", "add", stellarAlias, "--secret-key", "--overwrite"], `${secret}\n`);
+  // Do not pass `--secret-key`: in stellar-cli 23+ it means "prompt interactively" and ignores stdin.
+  // Pipe the S-key on stdin instead (supported for CI/Docker): `echo S... | stellar keys add NAME --overwrite`
+  const result = runStellar(["keys", "add", stellarAlias, "--overwrite"], `${secret}\n`);
 
   if (stellarCliAppearsMissing(result)) {
     console.warn(
       `[telos-registry] Stellar CLI not on PATH — skipped importing "${stellarAlias}" from TELOS_REGISTRY_SIGNER_SECRET.\n` +
         `  Install: https://developers.stellar.org/docs/tools/developer-tools\n` +
         `  Or run once in a terminal where stellar works:\n` +
-        `    stellar keys add ${stellarAlias} --secret-key --overwrite\n` +
+        `    echo '<S_KEY>' | stellar keys add ${stellarAlias} --overwrite\n` +
         `  Or set TELOS_REGISTRY_SKIP_STELLAR_BOOTSTRAP=1 after adding the key manually.\n` +
         `  On-chain registry reads/writes need that alias in the Stellar CLI keystore.`,
     );
