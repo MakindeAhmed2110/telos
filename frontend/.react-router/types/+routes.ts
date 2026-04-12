@@ -23,15 +23,6 @@ type Pages = {
   "/dashboard": {
     params: {};
   };
-  "/dashboard/agents": {
-    params: {};
-  };
-  "/dashboard/transactions": {
-    params: {};
-  };
-  "/dashboard/settings": {
-    params: {};
-  };
   "/about": {
     params: {};
   };
@@ -40,7 +31,7 @@ type Pages = {
 type RouteFiles = {
   "root.tsx": {
     id: "root";
-    page: "/" | "/how-it-works" | "/economy" | "/dashboard" | "/dashboard/agents" | "/dashboard/transactions" | "/dashboard/settings" | "/about";
+    page: "/" | "/how-it-works" | "/economy" | "/dashboard" | "/about";
   };
   "routes/_index.tsx": {
     id: "routes/_index";
@@ -56,23 +47,11 @@ type RouteFiles = {
   };
   "routes/dashboard.tsx": {
     id: "routes/dashboard";
-    page: "/dashboard" | "/dashboard/agents" | "/dashboard/transactions" | "/dashboard/settings";
+    page: "/dashboard";
   };
   "routes/dashboard._index.tsx": {
     id: "routes/dashboard._index";
     page: "/dashboard";
-  };
-  "routes/dashboard.agents.tsx": {
-    id: "routes/dashboard.agents";
-    page: "/dashboard/agents";
-  };
-  "routes/dashboard.transactions.tsx": {
-    id: "routes/dashboard.transactions";
-    page: "/dashboard/transactions";
-  };
-  "routes/dashboard.settings.tsx": {
-    id: "routes/dashboard.settings";
-    page: "/dashboard/settings";
   };
   "routes/about.tsx": {
     id: "routes/about";
@@ -87,8 +66,5 @@ type RouteModules = {
   "routes/economy": typeof import("./app/routes/economy.tsx");
   "routes/dashboard": typeof import("./app/routes/dashboard.tsx");
   "routes/dashboard._index": typeof import("./app/routes/dashboard._index.tsx");
-  "routes/dashboard.agents": typeof import("./app/routes/dashboard.agents.tsx");
-  "routes/dashboard.transactions": typeof import("./app/routes/dashboard.transactions.tsx");
-  "routes/dashboard.settings": typeof import("./app/routes/dashboard.settings.tsx");
   "routes/about": typeof import("./app/routes/about.tsx");
 };

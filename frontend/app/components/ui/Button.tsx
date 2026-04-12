@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { cn } from "~/lib/utils";
 
-type Variant = "primary" | "secondary" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "ghost" | "danger" | "outlineAccent";
 type Size = "sm" | "md" | "lg";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -30,6 +30,12 @@ const variants: Record<Variant, string> = {
     "bg-[rgba(255,51,102,0.12)] border border-[rgba(255,51,102,0.4)] text-[#ff3366]",
     "hover:bg-[rgba(255,51,102,0.2)] hover:border-[rgba(255,51,102,0.6)]",
   ].join(" "),
+  /** Orange outline — pairs with `secondary` for hero CTAs */
+  outlineAccent: [
+    "bg-[rgba(255,107,0,0.12)] border border-[rgba(255,107,0,0.4)] text-[#ffba5c]",
+    "hover:bg-[rgba(255,107,0,0.2)] hover:border-[rgba(255,107,0,0.6)] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)]",
+    "active:brightness-95",
+  ].join(" "),
 };
 
 const sizes: Record<Size, string> = {
@@ -37,6 +43,22 @@ const sizes: Record<Size, string> = {
   md: "telos-btn--md",
   lg: "telos-btn--lg",
 };
+
+const baseClassName = [
+  "telos-btn font-ui font-medium cursor-pointer select-none",
+  "transition-all duration-200",
+  "inline-flex items-center justify-center gap-2",
+  "disabled:opacity-40 disabled:cursor-not-allowed",
+].join(" ");
+
+/** Same styles as `<Button>` for use on `<Link>` (avoids invalid `<a><button>` nesting). */
+export function getButtonClassName(
+  variant: Variant = "primary",
+  size: Size = "md",
+  className?: string
+) {
+  return cn(baseClassName, variants[variant], sizes[size], className);
+}
 
 export default function Button({
   variant = "primary",
@@ -52,15 +74,7 @@ export default function Button({
       whileTap={{ scale: 0.97 }}
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={cn(
-        "telos-btn font-ui font-medium cursor-pointer select-none",
-        "transition-all duration-200",
-        "inline-flex items-center justify-center gap-2",
-        "disabled:opacity-40 disabled:cursor-not-allowed",
-        variants[variant],
-        sizes[size],
-        className
-      )}
+      className={cn(baseClassName, variants[variant], sizes[size], className)}
       disabled={disabled || loading}
       {...(props as React.ComponentProps<typeof motion.button>)}
     >

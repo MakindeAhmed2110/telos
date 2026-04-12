@@ -3,7 +3,7 @@ import { lazy, Suspense } from "react";
 import { Link } from "react-router";
 import type { Route } from "./+types/_index";
 import LandingFlow from "~/components/LandingFlow";
-import Button from "~/components/ui/Button";
+import Button, { getButtonClassName } from "~/components/ui/Button";
 import { ArrowRight, Zap, Wallet, Shield } from "lucide-react";
 import StarLogo from "~/components/StarLogo";
 
@@ -40,7 +40,7 @@ function FeatureCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.25 }}
       transition={{ delay, type: "spring", stiffness: 100, damping: 22 }}
-      className="group relative rounded-2xl overflow-hidden p-6 md:p-7 transition-all duration-300 h-full flex flex-col text-left"
+      className="landing-feature-card"
       style={{
         background: "rgba(13,13,26,0.82)",
         backdropFilter: "blur(20px)",
@@ -95,22 +95,14 @@ export default function Index() {
             <AgentEconomy3D />
           </Suspense>
         </div>
-        <div
-          className="absolute inset-0 z-20 pointer-events-none"
-          style={{
-            background: [
-              "radial-gradient(ellipse 55% 55% at 50% 45%, transparent 0%, rgba(0,0,0,0.78) 100%)",
-              "linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, transparent 25%, transparent 72%, rgba(0,0,0,0.85) 100%)",
-            ].join(", "),
-          }}
-        />
+        <div className="absolute inset-0 z-20 pointer-events-none landing-hero-vignette" aria-hidden />
 
-        <div className="relative z-30 text-center px-6 max-w-2xl pointer-events-none">
+        <div className="relative z-30 text-center px-6 max-w-4xl mx-auto pointer-events-none">
           <motion.p
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="font-ui font-semibold uppercase tracking-[0.2em] text-[#ff9500] text-[0.625rem] mb-5"
+            className="font-ui font-semibold uppercase tracking-[0.2em] text-[#ff9500] text-[0.6875rem] md:text-[0.75rem] mb-5"
           >
             REGISTRY · MANAGER · X402
           </motion.p>
@@ -118,22 +110,23 @@ export default function Index() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.65 }}
-            className="font-display italic text-white leading-[1.02]"
+            className="font-display italic text-white leading-[1.05]"
             style={{
-              fontSize: "clamp(2.5rem, 7vw, 4.25rem)",
+              fontSize: "clamp(2.85rem, 8.5vw, 5.5rem)",
               letterSpacing: "-0.03em",
-              textShadow: "0 0 32px rgba(255,107,0,0.2)",
+              textShadow:
+                "0 2px 24px rgba(0,0,0,0.85), 0 1px 0 rgba(0,0,0,0.5), 0 0 40px rgba(255,107,0,0.12)",
             }}
           >
             Agent economy,
             <br />
-            <span style={{ color: "rgba(255,186,92,0.95)" }}>machine-native pay.</span>
+            <span className="landing-hero-gradient">machine-native pay.</span>
           </motion.h1>
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.55, duration: 0.6 }}
-            className="font-ui font-light text-[0.9375rem] md:text-[1rem] text-[#9898b0] max-w-md mx-auto leading-relaxed mt-5 mb-9"
+            className="font-ui font-normal text-[1.0625rem] sm:text-[1.125rem] md:text-[1.1875rem] text-[#d2d2e4] max-w-xl mx-auto leading-relaxed mt-6 mb-0 landing-hero-lede"
           >
             Telos is an autonomous agent economy: a Stellar-backed registry for discovery and payTo, plus this UI where
             your manager agent hires specialists with machine payments — no card on every API call.
@@ -142,21 +135,28 @@ export default function Index() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.75, duration: 0.45 }}
-            className="flex items-center justify-center gap-3 flex-wrap pointer-events-auto"
+            className="mt-10 sm:mt-12 flex items-center justify-center gap-3 flex-wrap pointer-events-auto"
           >
-            <button
+            <Button
               type="button"
+              size="lg"
+              variant="outlineAccent"
+              className="rounded-full font-semibold shadow-none"
               onClick={() =>
                 document.getElementById("how-it-works-flow")?.scrollIntoView({ behavior: "smooth", block: "start" })
               }
-              className="inline-flex items-center gap-2 font-ui font-500 text-sm px-8 py-3.5 rounded-lg transition-all duration-200 bg-[rgba(255,107,0,0.12)] border border-[rgba(255,107,0,0.4)] text-[#ffba5c] hover:bg-[rgba(255,107,0,0.2)] hover:border-[rgba(255,107,0,0.6)] hover:shadow-[0_0_20px_rgba(255,107,0,0.15)]"
             >
-              See the flow <ArrowRight size={16} />
-            </button>
-            <Link to="/dashboard">
-              <Button size="lg" variant="secondary">
-                Open dashboard
-              </Button>
+              See the flow <ArrowRight size={18} strokeWidth={2} className="shrink-0" aria-hidden />
+            </Button>
+            <Link
+              to="/dashboard"
+              className={getButtonClassName(
+                "secondary",
+                "lg",
+                "rounded-full font-semibold no-underline shadow-none hover:shadow-none transition-transform duration-200 hover:scale-[1.01] active:scale-[0.97]"
+              )}
+            >
+              Open dashboard
             </Link>
           </motion.div>
         </div>

@@ -13,6 +13,7 @@ import {
   fetchRegistryAgents,
   formatAgentPriceLabel,
   getManagerBaseUrl,
+  pathQueryFromTargetUrl,
   runManagerPromptWithClientSigner,
   type PromptSuccess,
   type RegistryAgentRecord,
@@ -69,7 +70,10 @@ export default function DashboardIndex() {
         push("Manager agent is interpreting your task and selecting a capability route.", 1);
         break;
       case "registry":
-        push("Delegating to telos-registry — resolving specialist identity, baseUrl, and Stellar payTo.", 2);
+        push(
+          "Delegating to telos-registry — each capability maps to a real HTTP route on the specialist (e.g. GET /weather/…, POST /math/…).",
+          2,
+        );
         break;
       case "pay":
         push(
@@ -80,26 +84,13 @@ export default function DashboardIndex() {
         );
         break;
       case "settle":
-        push("Settlement: payment verified and payTo credited on Stellar.", 3);
         break;
-      case "done": {
-        const out = result as PromptSuccess | null;
-        const bits = [
-          "[TASK COMPLETE] Response synchronized.",
-          out?.httpStatus != null ? `HTTP ${out.httpStatus}` : null,
-          specialistId ? `specialist ${specialistId}` : null,
-          capability ? `capability ${capability}` : null,
-        ].filter(Boolean);
-        push(bits.join(" · "));
-        break;
-      }
-      case "error":
-        push(errorMessage ?? "Request failed.");
+      case "done":
         break;
       default:
         break;
     }
-  }, [phase, errorMessage, result, specialistId, capability, walletMode]);
+  }, [phase, walletMode]);
 
   const runTask = async () => {
     const text = prompt.trim();
@@ -143,12 +134,76 @@ export default function DashboardIndex() {
       setPath(out.interpreted?.path);
       setSpecialistId(out.agent?.id);
       setTransactionUrl(out.settlement?.transactionUrl);
+
+      const pq = pathQueryFromTargetUrl(out.targetUrl);
+      const rawPath = out.interpreted?.path?.trim();
+      const pathQuery =
+        pq !== "/"
+          ? pq
+          : rawPath
+            ? rawPath.startsWith("/")
+              ? rawPath
+              : `/${rawPath}`
+            : "/";
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "agent",
+          text: "Registry row resolved — the paid hire hits this HTTP route on the specialist:",
+          format: "hire",
+          method: out.method ?? "GET",
+          pathQuery,
+          specialistId: out.agent?.id,
+          capability: out.interpreted?.capability,
+          baseUrl: out.agent?.baseUrl,
+          payTo: out.agent?.payTo,
+        },
+        {
+          id: crypto.randomUUID(),
+          role: "agent",
+          text: "How the browser pays (x402):",
+          format: "payment",
+          walletMode: walletMode === "kit" ? "kit" : "generated",
+        },
+        {
+          id: crypto.randomUUID(),
+          role: "agent",
+          text: "Specialist responded — settlement credits their payTo on Stellar.",
+          format: "paid",
+          httpStatus: out.httpStatus,
+          transactionUrl: out.settlement?.transactionUrl,
+          transaction: out.settlement?.transaction,
+          payTo: out.agent?.payTo,
+          specialistId: out.agent?.id,
+        },
+        {
+          id: crypto.randomUUID(),
+          role: "agent",
+          text: "Full manager result payload (same as dashboard raw panel):",
+          format: "raw",
+          rawBody: JSON.stringify(out, null, 2),
+        },
+      ]);
+
       window.setTimeout(() => setPhase("done"), 700);
     } catch (e) {
       window.clearTimeout(tReg);
       window.clearTimeout(tPay);
+      const errText = e instanceof Error ? e.message : "Request failed";
       setPhase("error");
-      setErrorMessage(e instanceof Error ? e.message : "Request failed");
+      setErrorMessage(errText);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          role: "agent",
+          text: "",
+          format: "raw",
+          rawBody: errText,
+        },
+      ]);
     }
   };
 

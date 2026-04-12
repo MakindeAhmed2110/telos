@@ -16,25 +16,38 @@ function ParticleGalaxy({ mousePos }: { mousePos: { x: number; y: number } }) {
     const dummy = new THREE.Object3D();
     const mats: THREE.Matrix4[] = [];
     const cols: THREE.Color[] = [];
+    const maxArmR = 20;
 
     for (let i = 0; i < COUNT; i++) {
-      const arm = Math.floor(Math.random() * 3);
-      const t = Math.pow(Math.random(), 0.7);
-      const baseAngle = (arm * 2 * Math.PI) / 3;
-      const angle = baseAngle + t * Math.PI * 3 + (Math.random() - 0.5) * 0.6;
-      const r = t * 9 + Math.random() * 1.2;
+      let px: number;
+      let py: number;
+      let pz: number;
 
-      const isCore = Math.random() < 0.12;
-      const px = isCore ? (Math.random() - 0.5) * 2 : Math.cos(angle) * r;
-      const py = isCore ? (Math.random() - 0.5) * 2 : Math.sin(angle) * r;
-      const pz = (Math.random() - 0.5) * 1.5;
+      if (i < COUNT * 0.78) {
+        const arm = Math.floor(Math.random() * 3);
+        const t = Math.pow(Math.random(), 0.62);
+        const baseAngle = (arm * 2 * Math.PI) / 3;
+        const angle = baseAngle + t * Math.PI * 3.2 + (Math.random() - 0.5) * 0.65;
+        const r = t * maxArmR + Math.random() * 2.2;
+
+        const isCore = Math.random() < 0.1;
+        px = isCore ? (Math.random() - 0.5) * 2.8 : Math.cos(angle) * r;
+        py = isCore ? (Math.random() - 0.5) * 2.8 : Math.sin(angle) * r;
+        pz = (Math.random() - 0.5) * 3.5;
+      } else {
+        const angle = Math.random() * Math.PI * 2;
+        const r = 11 + Math.random() * 14;
+        px = Math.cos(angle) * r;
+        py = Math.sin(angle) * r * (0.55 + Math.random() * 0.85);
+        pz = (Math.random() - 0.5) * 9;
+      }
 
       dummy.position.set(px, py, pz);
-      dummy.scale.setScalar(Math.random() * 0.015 + 0.004);
+      dummy.scale.setScalar(Math.random() * 0.018 + 0.004);
       dummy.updateMatrix();
       mats.push(dummy.matrix.clone());
 
-      const dist = Math.sqrt(px * px + py * py) / 9;
+      const dist = Math.sqrt(px * px + py * py) / maxArmR;
       const blend = Math.min(1, dist);
       cols.push(new THREE.Color(
         THREE.MathUtils.lerp(1.0, 0.48, blend),
@@ -73,7 +86,7 @@ function ParticleGalaxy({ mousePos }: { mousePos: { x: number; y: number } }) {
       <meshBasicMaterial
         vertexColors
         transparent
-        opacity={0.85}
+        opacity={0.5}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
         toneMapped={false}
@@ -126,7 +139,7 @@ export default function HeroParticles() {
   return (
     <div className="absolute inset-0">
       <Canvas
-        camera={{ position: [0, 0, 13], fov: 58 }}
+        camera={{ position: [0, 0, 15.5], fov: 64 }}
         gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
         dpr={[1, 1.5]}
         style={{ background: "transparent" }}

@@ -115,9 +115,23 @@ export type PromptSuccess = {
   response?: unknown;
   httpStatus?: number;
   targetUrl?: string;
+  /** HTTP verb used for the paid specialist call */
+  method?: "GET" | "POST";
   agent?: { id: string; baseUrl: string; payTo: string } | null;
   ok?: boolean;
 };
+
+/** Path + query segment for dashboards, e.g. `/weather/testnet?city=SF` */
+export function pathQueryFromTargetUrl(targetUrl: string | undefined): string {
+  if (!targetUrl?.trim()) return "/";
+  try {
+    const u = new URL(targetUrl);
+    const pq = u.pathname + u.search;
+    return pq || "/";
+  } catch {
+    return "/";
+  }
+}
 
 export async function postManagerPrompt(prompt: string): Promise<PromptSuccess> {
   const base = getManagerBaseUrl();
@@ -206,6 +220,7 @@ export async function runManagerPromptWithClientSigner(
   return {
     interpreted: plan.interpreted,
     targetUrl: plan.targetUrl,
+    method: plan.method,
     agent: plan.agent,
     ok: result.status >= 200 && result.status < 300,
     httpStatus: result.status,

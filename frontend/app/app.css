@@ -142,6 +142,7 @@ body {
   padding-bottom: 0.875rem;
   padding-left: 2rem;
   padding-right: 2rem;
+  min-height: 3rem;
   font-size: 0.875rem;
   line-height: 1.3;
   border-radius: 0.5rem;
@@ -193,6 +194,36 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* —— Landing hero: read legibility over 3D economy scene —— */
+.landing-hero-vignette {
+  background:
+    radial-gradient(ellipse 88% 72% at 50% 42%, rgba(5, 5, 16, 0.82) 0%, rgba(5, 5, 16, 0.35) 42%, transparent 72%),
+    radial-gradient(ellipse 115% 85% at 50% 48%, rgba(0, 0, 0, 0.22) 0%, transparent 62%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.45) 0%, transparent 24%, transparent 72%, rgba(0, 0, 0, 0.75) 100%);
+}
+
+.landing-hero-gradient {
+  background: linear-gradient(120deg, #ffe8c4 0%, #ffba5c 45%, #ff8a2c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Fallback if clip unsupported */
+  text-shadow: none;
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.45));
+}
+
+@supports not (background-clip: text) {
+  .landing-hero-gradient {
+    color: #ffba5c;
+  }
+}
+
+.landing-hero-lede {
+  text-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.9),
+    0 2px 16px rgba(0, 0, 0, 0.5);
 }
 
 /* —— Economy route: structure + spacing (does not depend on Tailwind utilities) —— */
@@ -847,14 +878,61 @@ body {
   }
 }
 
+.landing-product-card {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  padding: 2rem;
+}
+
+@media (min-width: 640px) {
+  .landing-product-card {
+    padding: 2.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-product-card {
+    padding: 2.5rem;
+  }
+}
+
 .landing-pillars {
   display: grid;
   gap: 1.25rem;
+  padding-top: 2rem;
 }
 
 @media (min-width: 768px) {
   .landing-pillars {
     grid-template-columns: repeat(3, 1fr);
+    padding-top: 2.5rem;
+  }
+}
+
+.landing-feature-card {
+  box-sizing: border-box;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  text-align: left;
+  border-radius: 1rem;
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+@media (min-width: 640px) {
+  .landing-feature-card {
+    padding: 2.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .landing-feature-card {
+    padding: 2.5rem;
   }
 }
 
@@ -1751,6 +1829,125 @@ body {
   margin: 0.5rem 0 0;
   font-size: 0.65rem;
   color: #00b4ff;
+}
+
+.manager-chat__card--pipeline {
+  border-color: rgba(255, 149, 0, 0.18);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.manager-chat__card--paid {
+  border-color: rgba(0, 255, 148, 0.22);
+  background: linear-gradient(165deg, rgba(0, 40, 28, 0.35) 0%, rgba(0, 0, 0, 0.28) 100%);
+}
+
+.manager-chat__card-label--success {
+  color: #00ff94;
+  letter-spacing: 0.12em;
+}
+
+.manager-chat__route-line {
+  margin: 0.65rem 0 0;
+  padding: 0.55rem 0.65rem;
+  border-radius: 0.45rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #e8e8f0;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  word-break: break-all;
+}
+
+.manager-chat__route-verb {
+  color: #ffba5c;
+  font-weight: 600;
+}
+
+.manager-chat__meta-list {
+  margin: 0.65rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: #9898b0;
+}
+
+.manager-chat__meta-k {
+  color: #5c5c78;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.manager-chat__steps {
+  margin: 0.65rem 0 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  line-height: 1.55;
+  color: #b0b0c8;
+}
+
+.manager-chat__steps li {
+  margin-bottom: 0.35rem;
+}
+
+.manager-chat__steps li:last-child {
+  margin-bottom: 0;
+}
+
+.manager-chat__paid-grid {
+  margin: 0.65rem 0 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: #c8c8d8;
+}
+
+.manager-chat__paid-row {
+  margin: 0 0 0.35rem;
+}
+
+.manager-chat__tx-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #00b4ff;
+  text-decoration: none;
+}
+
+.manager-chat__tx-link:hover {
+  text-decoration: underline;
+  color: #5cd4ff;
+}
+
+.manager-chat__card--raw {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.manager-chat__raw-intro {
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  color: #5c5c78;
+}
+
+.manager-chat__raw-pre {
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.45rem;
+  font-size: 0.65rem;
+  line-height: 1.45;
+  color: #b8b8c8;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: min(40vh, 22rem);
+  overflow-y: auto;
 }
 
 .manager-chat__composer {

@@ -143,7 +143,7 @@ export default function LandingFlow() {
             <motion.div
               {...fade}
               transition={{ delay: 0.05 }}
-              className="rounded-2xl p-6 md:p-8 h-full"
+              className="landing-product-card"
               style={{
                 background: "rgba(10,10,20,0.85)",
                 border: "1px solid rgba(255,149,0,0.2)",
@@ -168,7 +168,7 @@ export default function LandingFlow() {
             <motion.div
               {...fade}
               transition={{ delay: 0.1 }}
-              className="rounded-2xl p-6 md:p-8 h-full"
+              className="landing-product-card"
               style={{
                 background: "rgba(10,10,20,0.85)",
                 border: "1px solid rgba(123,47,255,0.25)",

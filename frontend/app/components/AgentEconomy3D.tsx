@@ -13,12 +13,13 @@ import { AGENTS, CATEGORY_COLORS, type AgentCategory } from "~/data/mockData";
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
+/** Muted, cohesive palette — less saturation so hero text stays readable */
 const CAT_COLORS: Record<AgentCategory, [number, number, number]> = {
-  Trading:       [1.0, 0.42, 0.0],
-  Analytics:     [0.48, 0.19, 1.0],
-  Creative:      [0.0,  0.71, 1.0],
-  Infrastructure:[0.0,  1.0,  0.58],
-  Research:      [1.0,  0.84, 0.0],
+  Trading: [0.55, 0.38, 0.55],
+  Analytics: [0.42, 0.35, 0.62],
+  Creative: [0.28, 0.45, 0.58],
+  Infrastructure: [0.35, 0.52, 0.48],
+  Research: [0.58, 0.48, 0.38],
 };
 
 // ─── Glow Sphere (layered) ──────────────────────────────────────────────────
@@ -50,7 +51,7 @@ function GlowSphere({
         <meshBasicMaterial
           color={c}
           transparent
-          opacity={0.05 * intensity}
+          opacity={0.035 * intensity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           side={THREE.BackSide}
@@ -62,7 +63,7 @@ function GlowSphere({
         <meshBasicMaterial
           color={c}
           transparent
-          opacity={0.12 * intensity}
+          opacity={0.08 * intensity}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
@@ -73,18 +74,18 @@ function GlowSphere({
         <meshStandardMaterial
           color={c}
           emissive={c}
-          emissiveIntensity={0.6 * intensity}
-          roughness={0.3}
-          metalness={0.5}
+          emissiveIntensity={0.35 * intensity}
+          roughness={0.45}
+          metalness={0.35}
         />
       </mesh>
-      {/* Bright center */}
+      {/* Bright center — toned down */}
       <mesh scale={0.4}>
         <sphereGeometry args={[radius, 8, 8]} />
         <meshBasicMaterial
           color="white"
           transparent
-          opacity={0.8}
+          opacity={0.35}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
@@ -116,9 +117,9 @@ function StellarCore() {
       <mesh ref={ringRef} rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[1.8, 0.08, 8, 80]} />
         <meshBasicMaterial
-          color="#ff9500"
+          color="#b87030"
           transparent
-          opacity={0.5}
+          opacity={0.22}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
@@ -128,22 +129,22 @@ function StellarCore() {
       <mesh rotation={[Math.PI / 2 + 0.3, 0, 0]}>
         <torusGeometry args={[2.4, 0.03, 8, 80]} />
         <meshBasicMaterial
-          color="#ff6b00"
+          color="#8a5a28"
           transparent
-          opacity={0.2}
+          opacity={0.12}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Outer glow layers */}
+      {/* Outer glow layers — dimmer so headline stays legible */}
       {[4.0, 2.5, 1.8].map((scale, i) => (
         <mesh key={i} scale={scale}>
           <sphereGeometry args={[PLANET_RADIUS, 16, 16]} />
           <meshBasicMaterial
-            color={i === 0 ? "#ff6b00" : "#ff9500"}
+            color={i === 0 ? "#6b4020" : "#8a5020"}
             transparent
-            opacity={[0.04, 0.08, 0.15][i]}
+            opacity={[0.02, 0.045, 0.08][i]}
             blending={THREE.AdditiveBlending}
             depthWrite={false}
           />
@@ -154,27 +155,33 @@ function StellarCore() {
       <mesh>
         <sphereGeometry args={[PLANET_RADIUS, 32, 32]} />
         <meshStandardMaterial
-          color="#ff9500"
-          emissive="#ff6b00"
-          emissiveIntensity={1.5}
-          roughness={0}
-          metalness={0.8}
+          color="#a86828"
+          emissive="#6b3818"
+          emissiveIntensity={0.75}
+          roughness={0.25}
+          metalness={0.65}
         />
       </mesh>
 
-      {/* White hot center */}
+      {/* White hot center — reduced bloom blow-out */}
       <mesh scale={0.3}>
         <sphereGeometry args={[PLANET_RADIUS, 16, 16]} />
-        <meshBasicMaterial color="white" blending={THREE.AdditiveBlending} depthWrite={false} />
+        <meshBasicMaterial
+          color="#ffd4a8"
+          transparent
+          opacity={0.55}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
       </mesh>
 
       {/* Atmosphere shell — Fresnel-like edge glow */}
       <mesh scale={1.18}>
         <sphereGeometry args={[PLANET_RADIUS, 32, 32]} />
         <meshBasicMaterial
-          color="#ff6b00"
+          color="#6b3818"
           transparent
-          opacity={0.08}
+          opacity={0.045}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           side={THREE.BackSide}
@@ -185,9 +192,9 @@ function StellarCore() {
       <mesh scale={1.55}>
         <sphereGeometry args={[PLANET_RADIUS, 16, 16]} />
         <meshBasicMaterial
-          color="#ff6b00"
+          color="#4a2810"
           transparent
-          opacity={0.03}
+          opacity={0.02}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
           side={THREE.BackSide}
@@ -250,7 +257,7 @@ function TransactionBeam({ start, end, color, progress }: BeamProps) {
         <lineBasicMaterial
           color={c}
           transparent
-          opacity={0.12 * alpha}
+          opacity={0.06 * alpha}
           blending={THREE.AdditiveBlending}
           depthWrite={false}
         />
@@ -288,7 +295,7 @@ function OrbitRing({ radius, tilt = 0 }: { radius: number; tilt?: number }) {
       <meshBasicMaterial
         color="#9898b0"
         transparent
-        opacity={0.07}
+        opacity={0.045}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
       />
@@ -307,7 +314,7 @@ function AgentLabel({ position, name, color }: { position: [number, number, numb
     ctx.font = "bold 24px 'JetBrains Mono', monospace";
     ctx.fillStyle = color;
     ctx.textAlign = "center";
-    ctx.globalAlpha = 0.9;
+    ctx.globalAlpha = 0.55;
     ctx.fillText(name, 128, 40);
     return c;
   }, [name, color]);
@@ -319,7 +326,7 @@ function AgentLabel({ position, name, color }: { position: [number, number, numb
       <spriteMaterial
         map={texture}
         transparent
-        opacity={0.75}
+        opacity={0.42}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
       />
@@ -331,8 +338,8 @@ function AgentLabel({ position, name, color }: { position: [number, number, numb
 
 function AmbientParticles() {
   const ref = useRef<THREE.Points>(null);
-  const COUNT = 3000;
-  const MAX_DIST = 22;
+  const COUNT = 3800;
+  const MAX_DIST = 32;
 
   const { positions, colors, sizes } = useMemo(() => {
     const pos = new Float32Array(COUNT * 3);
@@ -340,7 +347,7 @@ function AmbientParticles() {
     const sz = new Float32Array(COUNT);
 
     for (let i = 0; i < COUNT; i++) {
-      const r = Math.random() * 18 + 4;
+      const r = Math.random() * 26 + 5;
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.random() * Math.PI;
       const x = r * Math.sin(phi) * Math.cos(theta);
@@ -381,10 +388,10 @@ function AmbientParticles() {
   return (
     <points ref={ref} geometry={geo}>
       <pointsMaterial
-        size={0.06}
+        size={0.065}
         vertexColors
         transparent
-        opacity={0.5}
+        opacity={0.34}
         blending={THREE.AdditiveBlending}
         depthWrite={false}
         sizeAttenuation
@@ -396,7 +403,7 @@ function AmbientParticles() {
 // ─── Node layout ────────────────────────────────────────────────────────────
 
 const ORBIT_AGENTS = AGENTS.slice(0, 8).map((agent, i) => {
-  const orbitR = [4.5, 5.5, 6.5, 7.5, 4.8, 6.0, 5.2, 7.0][i];
+  const orbitR = [4.5, 5.5, 6.5, 7.5, 4.8, 6.0, 5.2, 7.0][i] * 1.35;
   const tilt = [0, 0.3, -0.2, 0.15, -0.35, 0.25, -0.1, 0.4][i];
   const phase = (i / 8) * Math.PI * 2;
   const speed = [0.12, 0.09, 0.07, 0.06, 0.14, 0.08, 0.11, 0.05][i];
@@ -428,7 +435,7 @@ function EconomyScene({ mousePos, compact }: { mousePos: { x: number; y: number 
   const baseCameraPos = useMemo(() => ({
     x: 0,
     y: compact ? 4 : 4,
-    z: compact ? 16 : 16,
+    z: compact ? 16 : 19,
   }), [compact]);
 
   // Spawn transaction beams
@@ -490,13 +497,13 @@ function EconomyScene({ mousePos, compact }: { mousePos: { x: number; y: number 
       {/* Three-point lighting */}
       <ambientLight intensity={0.05} />
       {/* Key light — warm, from accretion side */}
-      <pointLight position={[8, 3, 5]} intensity={1.0} color="#ff9500" distance={30} decay={2} />
+      <pointLight position={[8, 3, 5]} intensity={0.45} color="#c48040" distance={30} decay={2} />
       {/* Fill light — dim blue, opposite side */}
-      <pointLight position={[-5, -2, 8]} intensity={0.15} color="#3388ff" distance={30} decay={2} />
+      <pointLight position={[-5, -2, 8]} intensity={0.1} color="#4466aa" distance={30} decay={2} />
       {/* Rim light — purple, catches planet edges */}
-      <pointLight position={[-10, 5, -10]} intensity={0.3} color="#7b2fff" distance={30} decay={2} />
-      {/* Core glow */}
-      <pointLight position={[0, 0, 0]} intensity={3} color="#ff9500" distance={20} decay={2} />
+      <pointLight position={[-10, 5, -10]} intensity={0.15} color="#5a4488" distance={30} decay={2} />
+      {/* Core glow — was washing out hero text */}
+      <pointLight position={[0, 0, 0]} intensity={1.1} color="#a06028" distance={20} decay={2} />
 
       <AmbientParticles />
       <StellarCore />
@@ -569,7 +576,7 @@ function AgentNodeOrbit({
 
   return (
     <group ref={ref}>
-      <GlowSphere position={[0, 0, 0]} color={col} radius={radius} intensity={1.2} />
+      <GlowSphere position={[0, 0, 0]} color={col} radius={radius} intensity={0.65} />
       <AgentLabel position={[0, 0, 0]} name={agent.name.split(" ")[0]} color={hexColor} />
     </group>
   );
@@ -593,29 +600,29 @@ export default function AgentEconomy3D({ compact = false }: { compact?: boolean 
 
   return (
     <Canvas
-      camera={{ position: [0, 4, 16], fov: compact ? 55 : 50 }}
+      camera={{ position: [0, 4, 19], fov: compact ? 55 : 56 }}
       gl={{ antialias: true, alpha: true, powerPreference: "high-performance" }}
       dpr={[1, 1.5]}
       style={{ background: "transparent" }}
     >
-      <fog attach="fog" args={["#000000", 20, 50]} />
+      <fog attach="fog" args={["#000000", 24, 62]} />
       <EconomyScene mousePos={mousePos} compact={compact} />
 
       {/* Post-processing — Bloom + ChromaticAberration + Vignette */}
       <EffectComposer>
         <Bloom
-          intensity={1.2}
-          luminanceThreshold={0.3}
-          luminanceSmoothing={0.9}
-          radius={0.8}
+          intensity={0.45}
+          luminanceThreshold={0.55}
+          luminanceSmoothing={0.85}
+          radius={0.45}
         />
         <ChromaticAberration
           blendFunction={BlendFunction.NORMAL}
           offset={new THREE.Vector2(0.0006, 0.0006)}
         />
         <Vignette
-          offset={0.3}
-          darkness={0.7}
+          offset={0.42}
+          darkness={0.48}
           blendFunction={BlendFunction.NORMAL}
         />
       </EffectComposer>
