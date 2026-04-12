@@ -12,7 +12,7 @@
     "format:check": "prettier --check .",
     "typecheck": "turbo run typecheck --filter='@x402-stellar/*'",
     "test": "turbo run test --filter='@x402-stellar/*'",
-    "render:facilitator:build": "pnpm install --frozen-lockfile && pnpm --filter @x402-stellar/facilitator build",
+    "render:facilitator:build": "pnpm install --frozen-lockfile && pnpm --filter @x402-stellar/shared build && pnpm --filter @x402-stellar/facilitator build",
     "render:facilitator:start": "pnpm --filter @x402-stellar/facilitator start"
   },
   "pnpm": {
