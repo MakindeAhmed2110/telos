@@ -2,8 +2,8 @@
   "installCommand": "pnpm install",
   "buildCommand": "pnpm run build",
   "outputDirectory": "build/client",
-  "rewrites": [
+  "routes": [
     { "handle": "filesystem" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
