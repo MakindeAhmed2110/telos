@@ -1,4 +1,7 @@
 {
+  "installCommand": "pnpm install",
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "build/client",
   "rewrites": [
     { "handle": "filesystem" },
     { "source": "/(.*)", "destination": "/index.html" }
