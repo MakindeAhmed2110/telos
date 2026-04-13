@@ -33,6 +33,9 @@ Content-Type: application/json
   "payTo": "G...your_stellar_address..."
 }`;
 
+/** Hosted telos-registry URL shown in “Join the economy” (marketing copy; not tied to local dev .env). */
+const PUBLIC_REGISTRY_URL = "https://telos-wksr.onrender.com";
+
 function ArchNode({
   icon: Icon,
   title,
@@ -206,7 +209,16 @@ export default function LandingFlow() {
             </h2>
             <p className="font-ui font-light text-[#9898b0] text-[0.9375rem] leading-relaxed text-balance" style={{ margin: 0 }}>
               Run an HTTP service with x402 on the routes you want paid. Register once against telos-registry; the Telos UI
-              and other agents can discover and hire you.
+              and other agents can discover and hire you. Use the hosted registry at{" "}
+              <a
+                href={PUBLIC_REGISTRY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#7fdbff] underline decoration-[#7fdbff]/40 underline-offset-2 hover:decoration-[#7fdbff]"
+              >
+                {PUBLIC_REGISTRY_URL}
+              </a>
+              .
             </p>
           </motion.div>
 
@@ -222,6 +234,9 @@ export default function LandingFlow() {
               >
                 <Code2 size={14} className="text-[#5c5c78]" />
                 <span className="font-mono text-[0.65rem] text-[#5c5c78]">registry request</span>
+                <span className="font-mono text-[0.6rem] text-[#3a3a52] ml-auto truncate" title={PUBLIC_REGISTRY_URL}>
+                  {PUBLIC_REGISTRY_URL}
+                </span>
               </div>
               <pre
                 className="font-mono text-[0.65rem] sm:text-[0.7rem] leading-relaxed text-[#b8b8c8] overflow-x-auto whitespace-pre-wrap"
@@ -235,7 +250,26 @@ export default function LandingFlow() {
               {[
                 { n: 1, title: "Expose an API", body: "HTTPS + x402 payment requirements on the routes you sell." },
                 { n: 2, title: "Build the JSON record", body: "capabilities[], baseUrl, payTo (Stellar), optional suggestedPrice." },
-                { n: 3, title: "PUT /v1/agents/:id", body: "telos-registry validates and persists (on-chain or file mode)." },
+                {
+                  n: 3,
+                  title: "PUT /v1/agents/:id",
+                  body: (
+                    <>
+                      Send your{" "}
+                      <code className="text-[#b8b8c8] text-[0.75em]">PUT</code> to{" "}
+                      <a
+                        href={PUBLIC_REGISTRY_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[#7fdbff] underline decoration-[#7fdbff]/40 underline-offset-2 hover:decoration-[#7fdbff] break-all"
+                      >
+                        {PUBLIC_REGISTRY_URL}
+                      </a>
+                      <code className="text-[#5c5c78] text-[0.75em]">/v1/agents/:id</code> — telos-registry validates and
+                      persists (on-chain or file mode).
+                    </>
+                  ),
+                },
                 { n: 4, title: "Indexed for discovery", body: "Search and list endpoints surface your agent to consumers." },
                 { n: 5, title: "Shows in Telos UI", body: "Economy page and manager use the same listing to hire you." },
               ].map((step, i) => (
@@ -263,9 +297,9 @@ export default function LandingFlow() {
                     <p className="font-ui font-600 text-[0.9rem] text-[#e8e8f0]" style={{ margin: 0 }}>
                       {step.title}
                     </p>
-                    <p className="font-ui font-300 text-[0.8rem] text-[#5c5c78] leading-relaxed" style={{ margin: "0.25rem 0 0" }}>
+                    <div className="font-ui font-300 text-[0.8rem] text-[#5c5c78] leading-relaxed" style={{ margin: "0.25rem 0 0" }}>
                       {step.body}
-                    </p>
+                    </div>
                   </div>
                 </motion.div>
               ))}

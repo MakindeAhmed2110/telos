@@ -1427,6 +1427,204 @@ body {
   gap: 1.75rem;
 }
 
+/* Hiring log vs x402 showcase (dashboard) */
+.dashboard-showcase {
+  background: linear-gradient(180deg, rgba(18, 18, 38, 0.95) 0%, #14142b 100%);
+  border: 1px solid rgba(123, 47, 255, 0.12);
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dashboard-showcase__head {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.15rem;
+}
+
+@media (min-width: 640px) {
+  .dashboard-showcase__head {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+  }
+}
+
+.dashboard-showcase__lede {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #5c5c78;
+  max-width: 36rem;
+}
+
+.dashboard-showcase__toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.2rem;
+  border-radius: 0.65rem;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 0.15rem;
+}
+
+.dashboard-showcase__seg {
+  font-family: var(--font-ui);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: #5c5c78;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.dashboard-showcase__seg:hover {
+  color: #9898b0;
+}
+
+.dashboard-showcase__seg--on {
+  background: rgba(255, 149, 0, 0.14);
+  color: #ffba5c;
+  box-shadow: inset 0 0 0 1px rgba(255, 149, 0, 0.25);
+}
+
+.dashboard-showcase__body {
+  min-height: 14.5rem;
+}
+
+.dashboard-showcase__panel {
+  margin: 0;
+}
+
+.dashboard-showcase__panel-label {
+  margin: 0 0 0.65rem;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5c5c78;
+}
+
+.dashboard-showcase__log {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.55rem;
+  font-size: 0.65rem;
+  line-height: 1.65;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.dashboard-showcase__log-line {
+  display: block;
+}
+
+.dashboard-showcase__log-ts {
+  color: #3a3a52;
+  margin-right: 0.35rem;
+}
+
+.dashboard-showcase__log-line--info {
+  color: #9898b0;
+}
+
+.dashboard-showcase__log-line--ok {
+  color: #00ff94;
+}
+
+.dashboard-showcase__log-line--pay {
+  color: #ffba5c;
+}
+
+.dashboard-showcase__log-line--err {
+  color: #ff6b6b;
+}
+
+.dashboard-showcase__empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 300;
+  line-height: 1.55;
+  color: #5c5c78;
+}
+
+.dashboard-showcase__panel--x402 {
+  padding-top: 0.15rem;
+}
+
+.dashboard-showcase__x402-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.dashboard-showcase__x402-list li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.dashboard-showcase__x402-icon {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 180, 255, 0.08);
+  border: 1px solid rgba(0, 180, 255, 0.2);
+  color: #7fdbff;
+}
+
+.dashboard-showcase__x402-title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #e8e8f0;
+}
+
+.dashboard-showcase__x402-desc {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 300;
+  line-height: 1.5;
+  color: #5c5c78;
+}
+
+.dashboard-showcase__x402-meta {
+  margin: 0.35rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: #9898b0;
+}
+
+.dashboard-showcase__x402-link {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00b4ff;
+  text-decoration: none;
+}
+
+.dashboard-showcase__x402-link:hover {
+  text-decoration: underline;
+  color: #5cd4ff;
+}
+
 .dashboard-split {
   display: grid;
   gap: 2rem;
@@ -1669,8 +1867,8 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
   overflow: hidden;
-  min-height: 22rem;
-  max-height: min(70vh, 36rem);
+  min-height: 30rem;
+  max-height: min(82vh, 46rem);
 }
 
 .manager-chat__header {

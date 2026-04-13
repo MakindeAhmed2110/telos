@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import type { Route } from "./+types/dashboard._index";
 import A2ATopology from "~/components/A2ATopology";
+import DashboardProtocolShowcase from "~/components/DashboardProtocolShowcase";
 import Button from "~/components/ui/Button";
 import ManagerChatPanel, { type ChatMessage } from "~/components/ManagerChatPanel";
 import ManagerHirePanel, { type HirePhase } from "~/components/ManagerHirePanel";
@@ -15,6 +16,7 @@ import {
   getManagerBaseUrl,
   pathQueryFromTargetUrl,
   runManagerPromptWithClientSigner,
+  type HireLogLine,
   type PromptSuccess,
   type RegistryAgentRecord,
 } from "~/lib/telosApi";
@@ -29,7 +31,8 @@ export default function DashboardIndex() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [phase, setPhase] = useState<HirePhase>("idle");
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
-  const [result, setResult] = useState<unknown>(null);
+  const [result, setResult] = useState<PromptSuccess | null>(null);
+  const [hireLog, setHireLog] = useState<HireLogLine[]>([]);
   const [capability, setCapability] = useState<string | undefined>();
   const [path, setPath] = useState<string | undefined>();
   const [specialistId, setSpecialistId] = useState<string | undefined>();
@@ -39,6 +42,10 @@ export default function DashboardIndex() {
 
   const runIdRef = useRef(0);
   const loggedPhasesRef = useRef(new Set<string>());
+
+  const appendHireLog = useCallback((line: HireLogLine) => {
+    setHireLog((prev) => [...prev, line]);
+  }, []);
 
   const loadAgents = useCallback(async () => {
     try {
@@ -101,6 +108,7 @@ export default function DashboardIndex() {
 
     setErrorMessage(undefined);
     setResult(null);
+    setHireLog([]);
     setCapability(undefined);
     setPath(undefined);
     setSpecialistId(undefined);
@@ -119,10 +127,10 @@ export default function DashboardIndex() {
       if (walletMode === "generated") {
         if (!walletSecret) throw new Error("Generated wallet secret missing. Disconnect and generate again.");
         const signer = createEd25519Signer(walletSecret, getStellarCaip2Network());
-        out = await runManagerPromptWithClientSigner(text, signer);
+        out = await runManagerPromptWithClientSigner(text, signer, { onHireLog: appendHireLog });
       } else if (walletMode === "kit") {
         const signer = createWalletsKitClientSigner(wallet.address, getStellarNetworkPassphrase());
-        out = await runManagerPromptWithClientSigner(text, signer);
+        out = await runManagerPromptWithClientSigner(text, signer, { onHireLog: appendHireLog });
       } else {
         throw new Error("Connect a Stellar wallet or generate one to pay x402 from the browser.");
       }
@@ -192,6 +200,7 @@ export default function DashboardIndex() {
       window.clearTimeout(tReg);
       window.clearTimeout(tPay);
       const errText = e instanceof Error ? e.message : "Request failed";
+      appendHireLog({ ts: new Date().toISOString(), level: "err", msg: errText });
       setPhase("error");
       setErrorMessage(errText);
       setMessages((prev) => [
@@ -247,6 +256,8 @@ export default function DashboardIndex() {
             busy={busy}
             phase={phase}
           />
+
+          <DashboardProtocolShowcase hireLog={hireLog} result={result} walletMode={walletMode} />
 
           <div className="dashboard-panel dashboard-panel--economy">
             <div className="dashboard-panel__head">

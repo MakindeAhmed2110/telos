@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createApp } from "./app.js";
 import {
+  AGENTS_PUBLIC_BASE_URL,
   PAYWALL_DISABLED,
   PORT,
   assertSeparatePayTosIfRequired,
@@ -22,7 +23,7 @@ async function main(): Promise<void> {
 
   const app = createApp();
   app.listen(PORT, () => {
-    console.log(`[telos-agents] http://localhost:${PORT}`);
+    console.log(`[telos-agents] listening on port ${PORT} (public base URL for registry + clients: ${AGENTS_PUBLIC_BASE_URL})`);
   });
 }
 

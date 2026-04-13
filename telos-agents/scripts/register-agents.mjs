@@ -16,6 +16,28 @@ const BASE_URL = (process.env.AGENTS_PUBLIC_BASE_URL ?? "http://localhost:3100")
 const NETWORK = "stellar:testnet";
 const PRICE = process.env.PAYMENT_PRICE?.trim() ?? "0.01";
 
+function hostLooksLocal(url) {
+  try {
+    const { hostname } = new URL(url);
+    return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
+  } catch {
+    return true;
+  }
+}
+
+/** Remote registry + localhost agent URL breaks browsers (Vercel → localhost). */
+if (!hostLooksLocal(REGISTRY_URL) && hostLooksLocal(BASE_URL) && process.env.ALLOW_LOCALHOST_AGENT_URL !== "1") {
+  console.error(
+    [
+      "Refusing to register: REGISTRY_URL points to a remote host but AGENTS_PUBLIC_BASE_URL is localhost.",
+      "Set AGENTS_PUBLIC_BASE_URL to your deployed telos-agents HTTPS origin (same value as on Render).",
+      "Then: pnpm register:agents",
+      "Override (not recommended): ALLOW_LOCALHOST_AGENT_URL=1",
+    ].join("\n"),
+  );
+  process.exit(1);
+}
+
 const AGENTS = [
   { id: "weather-oracle", name: "Weather Oracle", capabilities: ["weather"], payEnv: "PAY_TO_WEATHER" },
   { id: "mathsolver", name: "Math Solver", capabilities: ["math"], payEnv: "PAY_TO_MATH" },

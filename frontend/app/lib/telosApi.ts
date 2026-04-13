@@ -8,13 +8,12 @@ export function getManagerBaseUrl(): string {
 
 /**
  * Browser → telos-registry for read-only listings (CORS enabled in telos-registry).
- * Defaults to `http://localhost:4010` — same as manager’s `REGISTRY_URL` — so the economy page skips the
- * manager proxy hop (`/v1/registry/agents`). Override with `VITE_TELOS_REGISTRY_URL` if your registry
- * is on another host.
+ * Defaults to the hosted registry — same as manager’s `REGISTRY_URL` in production demos. Override with
+ * `VITE_TELOS_REGISTRY_URL` (e.g. http://localhost:4010 for local telos-registry).
  */
 export function getRegistryBaseUrl(): string {
   const raw = import.meta.env.VITE_TELOS_REGISTRY_URL as string | undefined;
-  return (raw?.trim() ? raw : "http://localhost:4010").replace(/\/+$/, "");
+  return (raw?.trim() ? raw : "https://telos-wksr.onrender.com").replace(/\/+$/, "");
 }
 
 export type RegistryAgentRecord = {
@@ -109,6 +108,12 @@ export async function fetchRegistryAgents(): Promise<RegistryAgentRecord[]> {
   return agents;
 }
 
+export type HireLogLine = {
+  ts: string;
+  level: "info" | "ok" | "pay" | "err";
+  msg: string;
+};
+
 export type PromptSuccess = {
   interpreted?: { capability: string; path: string; source?: string };
   settlement?: { transaction?: string; transactionUrl?: string };
@@ -119,6 +124,8 @@ export type PromptSuccess = {
   method?: "GET" | "POST";
   agent?: { id: string; baseUrl: string; payTo: string } | null;
   ok?: boolean;
+  /** Whether the browser went through 402 → sign → retry (false = specialist did not require x402 on first response). */
+  usedX402Payment?: boolean;
 };
 
 /** Path + query segment for dashboards, e.g. `/weather/testnet?city=SF` */
@@ -188,24 +195,64 @@ export async function postManagerPromptPlan(prompt: string): Promise<PromptPlanR
   return j as PromptPlanResponse;
 }
 
+function truncateMiddle(s: string, max = 72): string {
+  if (s.length <= max) return s;
+  const head = Math.floor(max / 2) - 1;
+  const tail = max - head - 1;
+  return `${s.slice(0, head)}…${s.slice(-tail)}`;
+}
+
 /** Plan via manager, then pay the specialist from the browser (x402 + user signer). */
 export async function runManagerPromptWithClientSigner(
   prompt: string,
   signer: ClientStellarSigner,
+  options?: { onHireLog?: (line: HireLogLine) => void },
 ): Promise<PromptSuccess> {
   const { paidFetchWithSigner } = await import("~/lib/browserPaidFetch");
+  const pushLog = (level: HireLogLine["level"], msg: string) => {
+    options?.onHireLog?.({ ts: new Date().toISOString(), level, msg });
+  };
+
+  pushLog("info", "POST /v1/prompt/plan — manager resolving capability and registry row");
   const plan = await postManagerPromptPlan(prompt);
+  pushLog(
+    "ok",
+    `Plan · agent ${plan.agent.id} · ${plan.interpreted.capability} · ${plan.method} ${truncateMiddle(plan.targetUrl)}`,
+  );
+
   const headers: Record<string, string> = { accept: "application/json, */*" };
   let body: string | undefined;
   if (plan.method === "POST" && plan.body !== undefined) {
     headers["content-type"] = "application/json";
     body = JSON.stringify(plan.body);
   }
+
   const result = await paidFetchWithSigner(
     plan.targetUrl,
     { method: plan.method, headers, ...(body !== undefined ? { body } : {}) },
     signer,
+    {
+      onProgress: (e) => {
+        if (e.phase === "initial") {
+          if (e.status === 402) {
+            pushLog("pay", `Specialist first response HTTP ${e.status} — x402 payment required`);
+          } else {
+            pushLog("info", `Specialist first response HTTP ${e.status} — no 402; skipping x402 payment flow`);
+          }
+        } else if (e.phase === "payment_required") {
+          pushLog("pay", "Building USDC payment payload (Stellar / x402 client)");
+        } else if (e.phase === "signed_retry") {
+          pushLog("ok", "Wallet signed — retry with PAYMENT-SIGNATURE header");
+        } else if (e.phase === "final") {
+          pushLog("ok", `Paid response HTTP ${e.status}`);
+        }
+      },
+    },
   );
+
+  if (result.usedX402Payment && result.transaction) {
+    pushLog("ok", `Settlement recorded · tx ${truncateMiddle(result.transaction, 48)}`);
+  }
 
   let response: unknown;
   const ct = result.contentType ?? "";
@@ -224,6 +271,7 @@ export async function runManagerPromptWithClientSigner(
     agent: plan.agent,
     ok: result.status >= 200 && result.status < 300,
     httpStatus: result.status,
+    usedX402Payment: result.usedX402Payment,
     settlement: {
       transaction: result.transaction,
       transactionUrl: result.transactionUrl,

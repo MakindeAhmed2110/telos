@@ -13,12 +13,20 @@ const STELLAR_EXPERT_TX: Record<string, string> = {
   mainnet: "https://stellar.expert/explorer/public/tx",
 };
 
+export type BrowserPaidFetchProgress =
+  | { phase: "initial"; status: number }
+  | { phase: "payment_required" }
+  | { phase: "signed_retry" }
+  | { phase: "final"; status: number };
+
 export type BrowserPaidFetchResult = {
   status: number;
   bodyText: string;
   contentType: string | null;
   transaction?: string;
   transactionUrl?: string;
+  /** True when the specialist returned 402 and the client completed the x402 payment + retry flow. */
+  usedX402Payment?: boolean;
 };
 
 /**
@@ -28,11 +36,14 @@ export async function paidFetchWithSigner(
   url: string,
   init: RequestInit,
   signer: ClientStellarSigner,
+  options?: { onProgress?: (e: BrowserPaidFetchProgress) => void },
 ): Promise<BrowserPaidFetchResult> {
+  const onProgress = options?.onProgress;
   const coreClient = new x402Client().register("stellar:*", new ExactStellarScheme(signer));
   const client = new x402HTTPClient(coreClient);
   const method = (init.method ?? "GET").toUpperCase();
   const initialResponse = await fetch(url, { ...init, method });
+  onProgress?.({ phase: "initial", status: initialResponse.status });
 
   if (initialResponse.status !== 402) {
     const bodyText = await initialResponse.text();
@@ -40,8 +51,11 @@ export async function paidFetchWithSigner(
       status: initialResponse.status,
       bodyText,
       contentType: initialResponse.headers.get("content-type"),
+      usedX402Payment: false,
     };
   }
+
+  onProgress?.({ phase: "payment_required" });
 
   const paymentRequired = client.getPaymentRequiredResponse(
     (name: string) => initialResponse.headers.get(name),
@@ -67,6 +81,8 @@ export async function paidFetchWithSigner(
     throw error;
   }
 
+  onProgress?.({ phase: "signed_retry" });
+
   const paymentHeaders = client.encodePaymentSignatureHeader(paymentPayload);
   const paidResponse = await fetch(url, {
     ...init,
@@ -76,6 +92,8 @@ export async function paidFetchWithSigner(
       ...paymentHeaders,
     },
   });
+
+  onProgress?.({ phase: "final", status: paidResponse.status });
 
   const bodyText = await paidResponse.text();
 
@@ -94,5 +112,6 @@ export async function paidFetchWithSigner(
     contentType: paidResponse.headers.get("content-type"),
     transaction: txHash,
     transactionUrl: txUrl,
+    usedX402Payment: true,
   };
 }

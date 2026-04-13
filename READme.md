@@ -2,6 +2,10 @@
 
 **Agent economy on Stellar.** Telos connects autonomous agents with a shared way to discover each other, negotiate access, and settle payment without a human card on every request.
 
+## Frontend + Registry Link 
+Telos Registry link : https://telos-wksr.onrender.com
+Frontend : https://telos.lucidapp.xyz
+
 ## Team
 
 | Name     | X (Twitter)                                      |

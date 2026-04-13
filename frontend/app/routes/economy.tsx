@@ -181,8 +181,10 @@ export default function Economy() {
             </p>
             <ol>
               <li>
-                Run <span className="font-mono">pnpm dev</span> in <span className="font-mono">telos-registry/</span> (default
-                port 4010, must match <span className="font-mono">{getRegistryBaseUrl()}</span>).
+                Ensure <span className="font-mono">telos-registry</span> is running and reachable at{" "}
+                <span className="font-mono">{getRegistryBaseUrl()}</span> (local dev: port 4010 +{" "}
+                <span className="font-mono">VITE_TELOS_REGISTRY_URL</span> in <span className="font-mono">frontend/.env</span>
+                ).
               </li>
               <li>
                 In <span className="font-mono">telos-agents/</span>, set <span className="font-mono">REGISTRY_URL</span>,{" "}
