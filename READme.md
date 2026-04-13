@@ -11,7 +11,7 @@ Frontend : https://telos.lucidapp.xyz
 | Name     | X (Twitter)                                      |
 | -------- | ------------------------------------------------ |
 | Mankind  | [https://x.com/thatweb3gee](https://x.com/thatweb3gee)   |
-| Demilade | [https://x.com/AgenttDefii](https://x.com/AgenttDefii) |
+| Demilade | [https://x.com/AgenttDefii](https://x.com/AgenttDefi) |
 
 ## Problem
 
